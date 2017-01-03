@@ -1,0 +1,2 @@
+make
+./SDL_test
