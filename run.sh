@@ -1,2 +1,0 @@
-make
-./SDL_test

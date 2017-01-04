@@ -1,10 +1,14 @@
 #include "Scene.hpp"
 
-Scene::Scene(int width, int height)
+#include <iostream>
+
+Scene::Scene(int width, int height) :
+	m_shader(width, height),
+	m_time(QTime::currentTime())
 {
 	m_window = SDL_CreateWindow("SDL Window", /* The first parameter is the window title */
 	                            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-	                            width, height,
+															width, height,
 	                            SDL_WINDOW_SHOWN);
 	m_renderer = SDL_CreateRenderer(m_window, -1, 0);
   SDL_RenderSetLogicalSize(m_renderer, width, height);
@@ -14,7 +18,6 @@ Scene::Scene(int width, int height)
                                 width, height);
 
   m_pixels = new Uint32[width * height];
-  m_surface_in = NULL;
   m_surface_out = SDL_CreateRGBSurfaceFrom(m_pixels,
                                            width, height,
                                            32, 0,
@@ -27,13 +30,13 @@ Scene::Scene(int width, int height)
   m_height = height;
   m_active = true;
 	m_frame = 0;
+	m_last_frame_time = m_time.elapsed();
 }
 
 Scene::~Scene()
 {
   delete [] m_pixels;
   SDL_DestroyTexture(m_texture);
-  SDL_FreeSurface(m_surface_in);
   SDL_FreeSurface(m_surface_out);
   SDL_DestroyRenderer(m_renderer);
   SDL_DestroyWindow(m_window);
@@ -64,7 +67,10 @@ void Scene::update()
 	{
 		for(int x = 0; x < m_width; x++)
 		{
-			shader(x, y);
+			ngl::Vec3 c = m_shader.mainImage(ngl::Vec2(x, y), m_frame);
+
+			writePixel(m_surface_out, x, y, c.m_r*255, c.m_g*255, c.m_b*255);
+			//writePixel(m_surface_out, x, y, 255, 255, 255);
 		}
 	}
   SDL_UnlockTexture(m_texture);
@@ -79,12 +85,16 @@ void Scene::render()
 	SDL_RenderCopy(m_renderer, m_texture, NULL, NULL);
 	/* this tells the renderer to actually show its contents to the screen. */
 	SDL_RenderPresent(m_renderer);
-	m_frame++;
-}
 
-void Scene::openInput(std::string file_name)
-{
-  m_surface_in = IMG_Load(file_name.c_str());
+	int renderTime = (m_time.elapsed() - m_last_frame_time);
+	std::cout << "frame:" << m_frame << std::endl;
+	std::cout << "time_taken:" << renderTime << "ms" << std::endl;
+	m_frame++;
+	m_last_frame_time = m_time.elapsed();
+	if(m_frame > 100)
+	{
+		m_active = false;
+	}
 }
 
 void Scene::readPixel(SDL_Surface *s, int x, int y, Uint8 *r, Uint8 *g, Uint8 *b)
@@ -123,7 +133,19 @@ int Scene::isActive()
   return m_active;
 }
 
-void Scene::shader(int x, int y)
+void Scene::saveFrame()
 {
-	float t = m_frame / 10.0;
+  std::string file_start("out/blendTINY_");
+  char frame[21];
+  sprintf(frame, "%04d", m_frame);
+
+  std::string file_name = file_start + frame;
+  if(SDL_SaveBMP(m_surface_out, file_name.c_str()))
+  {
+    std::cout << "error saving file:" << IMG_GetError() << std::endl;
+  }
+  else
+  {
+    std::cout << "saved frame " << m_frame << std::endl;
+  }
 }

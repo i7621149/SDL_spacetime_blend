@@ -22,14 +22,14 @@ int main(int argc, char *argv[]){
 		return -2;
 	}
 
-  Scene scene(500, 500);
-	scene.openInput("pattern.png");
+	Scene scene(100, 100);
 
 	while(scene.isActive())
   {
 		scene.input();
     scene.update();
     scene.render();
+    scene.saveFrame();
 
 		/* turns out SDL_WaitEvent just does an SDL_PollEvent and then an SDL_Delay(10) if there is nothing to do! */
 		SDL_Delay(10);
