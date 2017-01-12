@@ -2,11 +2,13 @@
 
 #include <cmath>
 
-Shader::Shader(int w, int h):
-  m_resolution(w, h)
+Shader::Shader(int w, int h, DrawMode draw_mode):
+  m_resolution(w, h)//,
+  //m_image_resolution(w, h)
 {
   m_image1 = loadSurface("textures/balls.png");
   m_image2 = loadSurface("textures/wood.png");
+  m_draw_mode = draw_mode;
 }
 
 Shader::~Shader()
@@ -136,7 +138,7 @@ ngl::Vec3 Shader::shade(ngl::Vec2 uv, float t)
     // color distribution in 4D space-time using partition of unity
     if(f1 < 0.0 && f2 < 0.0)
     {
-      s = colBlend(uv, f1, f2);
+      s = finalColor(uv, f1, f2);
     }
     else
     {
@@ -152,7 +154,7 @@ ngl::Vec3 Shader::shade(ngl::Vec2 uv, float t)
     }
   }
 
-  //clampCol(&s);
+  clampCol(&s);
 
   return s;
 }
@@ -206,6 +208,22 @@ SDL_Surface* Shader::loadSurface(std::string path)
   return loadedSurface;
 }
 
+ngl::Vec3 Shader::finalColor(ngl::Vec2 uv, float f1, float f2)
+{
+  ngl::Vec3 s;
+  switch (m_draw_mode) {
+  case DrawMode::SIMPLE_BLEND:
+    s = colBlend(uv, f1, f2);
+    break;
+  case DrawMode::SIMPLE_CLOSEST:
+    s = colClosest(uv, f1, f2);
+    break;
+  default:
+    break;
+  }
+  return s;
+}
+
 ngl::Vec3 Shader::colBlend(ngl::Vec2 uv, float f1, float f2)
 {
   //return ngl::Vec3(1.0, 0.0, 0.0);
@@ -215,9 +233,9 @@ ngl::Vec3 Shader::colBlend(ngl::Vec2 uv, float f1, float f2)
   float total_w1 = 0;
   float total_w2 = 0;
 
-  for(float y = 0; y < 1; y += 1/m_resolution.m_y)
+  for(float y = 0; y < 1; y += 1.0/m_resolution.m_x)//1/m_image_resolution.m_y)
   {
-    for(float x = 0; x < 1; x += 1/m_resolution.m_x)
+    for(float x = 0; x < 1; x += 1.0/m_resolution.m_y)//1/m_image_resolution.m_x)
     {
       ngl::Vec2 current_uv(x, y);
       float dist_squared = (uv.m_x-x)*(uv.m_x-x) + (uv.m_y-y)*(uv.m_y-y);
@@ -237,6 +255,45 @@ ngl::Vec3 Shader::colBlend(ngl::Vec2 uv, float f1, float f2)
 
   ngl::Vec3 c1 = total_c1 / total_w1;
   ngl::Vec3 c2 = total_c2 / total_w2;
+
+  float fa1 = fabs(f1);
+  float fa2 = fabs(f2);
+
+  float fsum = fa1 + fa2;
+  float w1 = fa2/fsum;
+  float w2 = fa1/fsum;
+
+  ngl::Vec3 s = c1 * w1 + c2 * w2;
+  return s;
+}
+
+ngl::Vec3 Shader::colClosest(ngl::Vec2 uv, float f1, float f2)
+{
+  float smallest_dist_squared1 = 10000;
+  ngl::Vec2 closest_uv1;
+  float smallest_dist_squared2 = 10000;
+  ngl::Vec2 closest_uv2;
+  for(float y = 0; y < 1; y += 1.0/m_resolution.m_x)//1/m_image_resolution.m_y)
+  {
+    for(float x = 0; x < 1; x += 1.0/m_resolution.m_y)//1/m_image_resolution.m_x)
+    {
+      ngl::Vec2 current_uv(x, y);
+      float dist_squared = (uv.m_x-x)*(uv.m_x-x) + (uv.m_y-y)*(uv.m_y-y);
+      if(func1(current_uv) >= 0 && dist_squared < smallest_dist_squared1)
+      {
+        smallest_dist_squared1 = dist_squared;
+        closest_uv1 = current_uv;
+      }
+      if(func2(current_uv) >= 0 && dist_squared < smallest_dist_squared2)
+      {
+        smallest_dist_squared2 = dist_squared;
+        closest_uv2 = current_uv;
+      }
+
+    }
+  }
+  ngl::Vec3 c1 = col1(closest_uv1);
+  ngl::Vec3 c2 = col2(closest_uv2);
 
   float fa1 = fabs(f1);
   float fa2 = fabs(f2);

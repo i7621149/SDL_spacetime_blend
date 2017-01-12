@@ -13,7 +13,7 @@
 class Scene
 {
 public:
-  Scene(int width, int height);
+  Scene(int width, int height, float scale, int frame, std::string file_out, DrawMode draw_mode);
   ~Scene();
 
   void input();
@@ -49,6 +49,8 @@ private:
 
   QTime m_time;
   int m_last_frame_time;
+
+  std::string m_file_out;
 };
 
 #endif//__SCENE_HPP__

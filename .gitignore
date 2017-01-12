@@ -1,4 +1,5 @@
 SDLNGL
+texblend
 out/*
 Makefile
 obj/*
