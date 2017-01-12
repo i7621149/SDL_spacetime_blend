@@ -2,13 +2,13 @@
 
 #include <iostream>
 
-Scene::Scene(int width, int height) :
-	m_shader(width, height),
+Scene::Scene(int width, int height, float scale, int frame, std::string file_out, DrawMode draw_mode) :
+	m_shader(width, height, draw_mode),
 	m_time(QTime::currentTime())
 {
 	m_window = SDL_CreateWindow("SDL Window", /* The first parameter is the window title */
 	                            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-															width, height,
+															width*scale, height*scale,
 	                            SDL_WINDOW_SHOWN);
 	m_renderer = SDL_CreateRenderer(m_window, -1, 0);
   SDL_RenderSetLogicalSize(m_renderer, width, height);
@@ -29,7 +29,8 @@ Scene::Scene(int width, int height) :
   m_width = width;
   m_height = height;
   m_active = true;
-	m_frame = 0;
+  m_frame = frame;
+  m_file_out = file_out;
 	m_last_frame_time = m_time.elapsed();
 }
 
@@ -45,15 +46,15 @@ Scene::~Scene()
 void Scene::input()
 {
   SDL_Event incomingEvent;
-		/* check incoming events */
-		while(SDL_PollEvent(&incomingEvent)){
-			switch(incomingEvent.type){
-			case SDL_QUIT:
-				/* if user closes program, then brake refresh loop by setting go = 0 */
-				m_active = 0;
-				break;
-			}
-		}
+  /* check incoming events */
+  while(SDL_PollEvent(&incomingEvent)){
+    switch(incomingEvent.type){
+    case SDL_QUIT:
+      /* if user closes program, then brake refresh loop by setting go = 0 */
+      m_active = 0;
+      break;
+    }
+  }
 }
 
 void Scene::update()
@@ -135,17 +136,17 @@ int Scene::isActive()
 
 void Scene::saveFrame()
 {
-  std::string file_start("out/blendTINY_");
+  std::string file_start(m_file_out);
   char frame[21];
-  sprintf(frame, "%04d", m_frame);
+  sprintf(frame, "%05d", m_frame);
 
-  std::string file_name = file_start + frame;
+  std::string file_name = file_start + frame + ".bmp";
   if(SDL_SaveBMP(m_surface_out, file_name.c_str()))
   {
     std::cout << "error saving file:" << IMG_GetError() << std::endl;
   }
   else
   {
-    std::cout << "saved frame " << m_frame << std::endl;
+    std::cout << "saved frame " << m_frame << " as " << file_name << std::endl;
   }
 }

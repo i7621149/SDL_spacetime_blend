@@ -6,14 +6,19 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+enum class DrawMode
+{
+	SIMPLE_BLEND,
+	SIMPLE_CLOSEST
+};
+
 class Shader
 {
 public:
-  Shader(int w, int h);
+  Shader(int w, int h, DrawMode draw_mode);
   ~Shader();
 
   ngl::Vec3 mainImage(ngl::Vec2 coord, int frame);
-
 
 private:
   float func1(ngl::Vec2 uv);
@@ -33,7 +38,11 @@ private:
 
   SDL_Surface *loadSurface(std::string path);
 
+  ngl::Vec3 finalColor(ngl::Vec2 uv, float f1, float f2);
+
   ngl::Vec3 colBlend(ngl::Vec2 uv, float f1, float f2);
+
+  ngl::Vec3 colClosest(ngl::Vec2 uv, float f1, float f2);
 
   ngl::Vec2 m_resolution;
 
@@ -41,6 +50,8 @@ private:
 
   SDL_Surface *m_image1;
   SDL_Surface *m_image2;
+
+  DrawMode m_draw_mode;
 };
 
 #endif//__SHADER_HPP__

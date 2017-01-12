@@ -1,5 +1,5 @@
 # This specifies the exe name
-TARGET=SDLNGL
+TARGET=SDL_spacetime
 # where to put the .o files
 OBJECTS_DIR=obj
 
@@ -33,14 +33,16 @@ MOC_DIR=moc
 # on a mac we don't create a .app bundle file ( for ease of multiplatform use)
 CONFIG-=app_bundle
 
-# Auto include all .cpp files in the project src directory (can specifiy individually if required)
+# Include all .cpp files in the project src directory
 SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/Scene.cpp \
-          $$PWD/src/Shader.cpp
+          $$PWD/src/Shader.cpp \
+          $$PWD/src/Shapes.cpp
 
 # same for the .h files
 HEADERS+= $$PWD/include/Scene.hpp \
-          $$PWD/include/Shader.hpp
+          $$PWD/include/Shader.hpp \
+          $$PWD/include/Shapes.hpp
 
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include

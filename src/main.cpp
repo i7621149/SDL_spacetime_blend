@@ -4,7 +4,8 @@
 #include <SDL2/SDL_image.h>
 #include "Scene.hpp"
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
 	if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
   {
 		/* Something went very wrong in the initialisation, all we can do is exit */
@@ -22,14 +23,21 @@ int main(int argc, char *argv[]){
 		return -2;
 	}
 
-	Scene scene(100, 100);
+	bool save_images = false;
+	int size = 100;
+	int frame = 0;
+	std::string file_out = "out/closest";
+	Scene scene(size, size, 500/size, frame, file_out, DrawMode::SIMPLE_BLEND);
 
 	while(scene.isActive())
   {
 		scene.input();
     scene.update();
     scene.render();
-    scene.saveFrame();
+    if(save_images)
+    {
+      scene.saveFrame();
+    }
 
 		/* turns out SDL_WaitEvent just does an SDL_PollEvent and then an SDL_Delay(10) if there is nothing to do! */
 		SDL_Delay(10);
