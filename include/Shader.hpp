@@ -8,6 +8,7 @@
 
 enum class DrawMode
 {
+	WHITE,
 	SIMPLE_BLEND,
 	SIMPLE_CLOSEST
 };

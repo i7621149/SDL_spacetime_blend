@@ -2,11 +2,13 @@
 
 #include <cmath>
 
+#include "Shapes.hpp"
+
 Shader::Shader(int w, int h, DrawMode draw_mode):
   m_resolution(w, h)//,
   //m_image_resolution(w, h)
 {
-  m_image1 = loadSurface("textures/balls.png");
+  m_image1 = loadSurface("textures/lena.png");
   m_image2 = loadSurface("textures/wood.png");
   m_draw_mode = draw_mode;
 }
@@ -135,21 +137,28 @@ ngl::Vec3 Shader::shade(ngl::Vec2 uv, float t)
 
   if(bb2diskcross >= 0)
   {
-    // color distribution in 4D space-time using partition of unity
-    if(f1 < 0.0 && f2 < 0.0)
+    if(m_draw_mode == DrawMode::WHITE)
     {
-      s = finalColor(uv, f1, f2);
+      s = ngl::Vec3(1,1,1);
     }
     else
     {
-      if(f1 >= 0.0)
+      // color distribution in 4D space-time using partition of unity
+      if(f1 < 0.0 && f2 < 0.0)
       {
-         s = col1(uv);
+        s = finalColor(uv, f1, f2);
       }
-
-      if(f2 >= 0.0)
+      else
       {
-         s = col2(uv);
+        if(f1 >= 0.0)
+        {
+           s = col1(uv);
+        }
+
+        if(f2 >= 0.0)
+        {
+           s = col2(uv);
+        }
       }
     }
   }

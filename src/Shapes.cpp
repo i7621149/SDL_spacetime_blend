@@ -17,5 +17,5 @@ float Shapes::box(ngl::Vec2 position, ngl::Vec2 size, float radius)
 
 float Shapes::circle(ngl::Vec2 position, float radius)
 {
-
+	return position.length() - radius;
 }
