@@ -4,6 +4,9 @@
 
 #include "Shapes.hpp"
 
+#define UNION Shapes::unionF
+#define INTERSECT Shapes::intersectF
+
 Shader::Shader(int w, int h, DrawMode draw_mode):
   m_resolution(w, h)//,
   //m_image_resolution(w, h)
@@ -21,15 +24,30 @@ Shader::~Shader()
 
 float Shader::func1(ngl::Vec2 uv)
 {
+/*
   uv.m_y = 1 - uv.m_y;
 
   ngl::Vec2 pos = ngl::Vec2(uv.m_x * 10.0 - 5.0, uv.m_y * 10.0 - 3.0);
 
   float disk1 = 1.0 - (pos[0] - 1.0) * (pos[0] - 1.0) - pos[1] * pos[1];
   float disk2 = 1.0 - (pos[0] + 1.5) * (pos[0] + 1.5) - pos[1] * pos[1];
-  float ddisk = fUnion(disk1, disk2);
+  float ddisk = UNION(disk1, disk2);
 
   return ddisk;
+*/
+  //float b = Shapes::box(uv-ngl::Vec2(0.5,0.5), ngl::Vec2(0.1, 0.1), 0);
+  //return b;
+  //uv -= ngl::Vec2(0.5, 0.5);
+  //float c = Shapes::circle(uv, 0.2);
+  //return c;
+  //float l = Shapes::line(uv, ngl::Vec2(0.5, 0.3), ngl::Vec2(0.7, 0.8), 0.1);
+  //return l;
+
+  uv = Shapes::translate(uv, ngl::Vec2(0.5, 0.5));
+  uv = Shapes::rotate(uv, 0.7854);
+  float result = Shapes::box(uv, ngl::Vec2(0.3, 0.3), 0.0);
+
+  return result;
 }
 
 float Shader::func2(ngl::Vec2 uv)
@@ -38,10 +56,10 @@ float Shader::func2(ngl::Vec2 uv)
 
   ngl::Vec2 pos = ngl::Vec2(uv.m_x * 10.0 - 5.0, uv.m_y * 10.0 - 3.0);
 
-  float bl1 = fIntersect(fIntersect(fIntersect((pos[0] + 1.0), (0.0 - pos[0])), (pos[1] - 2.0)), (5.0 - pos[1]));
-  float bl2 = fIntersect(fIntersect(fIntersect((pos[1] - 3.0), (4.0 - pos[1])) , (pos[0] + 2.0)), (1.0 - pos[0]));
+  float bl1 = INTERSECT(INTERSECT(INTERSECT((pos[0] + 1.0), (0.0 - pos[0])), (pos[1] - 2.0)), (5.0 - pos[1]));
+  float bl2 = INTERSECT(INTERSECT(INTERSECT((pos[1] - 3.0), (4.0 - pos[1])) , (pos[0] + 2.0)), (1.0 - pos[0]));
 
-  float cross = fUnion(bl1, bl2);
+  float cross = UNION(bl1, bl2);
 
   return cross;
 }
@@ -92,23 +110,23 @@ ngl::Vec3 Shader::shade(ngl::Vec2 uv, float t)
 
   float zwarp = t;
 
-  float cyl1 = fIntersect(func1(uv), -zwarp);
+  float cyl1 = INTERSECT(func1(uv), -zwarp);
 
-  float cyl2 = fIntersect(func2(uv), zwarp-1.0);
+  float cyl2 = INTERSECT(func2(uv), zwarp-1.0);
 
   float f1 = cyl1;
   float f2 = cyl2;
-  float f3 = fIntersect((t + 10.0), (10.0 - t));
+  float f3 = INTERSECT((t + 10.0), (10.0 - t));
   float r1 = pow((f1 / a2), 2.0) + pow((f2 / a3), 2.0);
   float r2 = 0.0;
 
-  if (f3 > 0.0)
+  if (f3 >= 0.0)
   {
       r2 = pow((f3 / a4), 2.0);
   }
 
   float rr = 0.0;
-  if(r1 > 0.0)
+  if(r1 >= 0.0)
   {
       rr = r1 / (r1 + r2);
   }
@@ -166,32 +184,6 @@ ngl::Vec3 Shader::shade(ngl::Vec2 uv, float t)
   clampCol(&s);
 
   return s;
-}
-
-float Shader::fUnion(float a, float b)
-{
-  /*
-  float max = a;
-  if(a < b)
-  {
-    max = b;
-  }
-  return max;
-  */
-  return a + b + std::sqrt(a * a + b * b);
-}
-
-float Shader::fIntersect(float a, float b)
-{
-  /*
-  float min = a;
-  if(a > b)
-  {
-    min = b;
-  }
-  return min;
-  */
-  return a + b - std::sqrt(a * a + b * b);
 }
 
 void Shader::clampCol(ngl::Vec3 *c)
