@@ -8,6 +8,7 @@
 
 enum class DrawMode
 {
+	WHITE,
 	SIMPLE_BLEND,
 	SIMPLE_CLOSEST
 };
@@ -31,8 +32,8 @@ private:
 
   ngl::Vec3 shade(ngl::Vec2 uv, float t);
 
-  float fUnion(float a, float b);
-  float fIntersect(float a, float b);
+  //float fUnion(float a, float b);
+  //float fIntersect(float a, float b);
 
   void clampCol(ngl::Vec3 *c);
 

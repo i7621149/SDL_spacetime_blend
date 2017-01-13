@@ -24,13 +24,13 @@ int main(int argc, char *argv[])
 	}
 
 	bool save_images = false;
-	int size = 100;
+	int size = 50;
 	int frame = 0;
 	std::string file_out = "out/closest";
-	Scene scene(size, size, 500/size, frame, file_out, DrawMode::SIMPLE_BLEND);
+	Scene scene(size, size, 500/size, frame, file_out, DrawMode::WHITE);
 
 	while(scene.isActive())
-  {
+	{
 		scene.input();
     scene.update();
     scene.render();
