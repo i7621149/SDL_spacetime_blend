@@ -4,3 +4,5 @@ out/*
 Makefile
 obj/*
 report.pdf
+report.log
+report.aux
