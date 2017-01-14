@@ -3,3 +3,4 @@ texblend
 out/*
 Makefile
 obj/*
+report.pdf
