@@ -6,3 +6,6 @@ obj/*
 report.pdf
 report.log
 report.aux
+video/*
+*.mov
+*.mp4

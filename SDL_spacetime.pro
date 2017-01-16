@@ -33,6 +33,12 @@ MOC_DIR=moc
 # on a mac we don't create a .app bundle file ( for ease of multiplatform use)
 CONFIG-=app_bundle
 
+# With C++11 support
+greaterThan(QT_MAJOR_VERSION, 4){
+CONFIG += c++11
+} else {
+QMAKE_CXXFLAGS += -std=c++0x
+}
 # Include all .cpp files in the project src directory
 SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/Scene.cpp \

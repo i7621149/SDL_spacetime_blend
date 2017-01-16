@@ -24,10 +24,11 @@ int main(int argc, char *argv[])
 	}
 
 	bool save_images = false;
-	int size = 50;
-	int frame = 0;
-	std::string file_out = "out/closest";
-	Scene scene(size, size, 500/size, frame, file_out, DrawMode::WHITE);
+	int size = 100;
+	int frame = 50;
+	std::string file_out = "out/hsv_textures";
+	int block_size = 1;
+	Scene scene(size, size, 500/size, frame, file_out, DrawMode::SIMPLE_BLEND, ColorMode::RGB, block_size);
 
 	while(scene.isActive())
 	{
