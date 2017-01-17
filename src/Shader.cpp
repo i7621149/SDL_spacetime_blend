@@ -6,13 +6,15 @@
 
 #define UNION Shapes::unionF
 #define INTERSECT Shapes::intersectF
+#define SUBTRACT Shapes::subtractF
 
-Shader::Shader(int w, int h, DrawMode draw_mode, ColorMode color_mode, int block_size):
+Shader::Shader(int w, int h, int length, DrawMode draw_mode, ColorMode color_mode, int block_size):
   m_resolution(w, h)//,
   //m_image_resolution(w, h)
 {
-  m_image1 = loadSurface("textures/lena.png");
-  m_image2 = loadSurface("textures/quentin.png");
+  m_length = length;
+  m_image1 = loadSurface("textures/balls.png");
+  m_image2 = loadSurface("textures/wood.png");
   m_draw_mode = draw_mode;
   m_color_mode = color_mode;
   m_block_size = block_size;
@@ -96,7 +98,8 @@ ngl::Vec3 Shader::mainImage(ngl::Vec2 coord, int frame)
 {
   ngl::Vec2 uv = coord / m_resolution;
 
-  float t = ((float)frame * m_speed) - 10.0;
+  //float t = ((float)frame * 0.2) - 10.0;
+  float t = ((float)frame * 20.0/m_length) - 10.0;
 
   ngl::Vec3 color = shade(uv, t);
 

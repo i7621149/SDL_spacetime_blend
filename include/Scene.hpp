@@ -13,7 +13,7 @@
 class Scene
 {
 public:
-  Scene(int width, int height, float scale, int frame, std::string file_out, DrawMode draw_mode, ColorMode color_mode, int block_size);
+  Scene(int width, int height, int length, float scale, int frame, std::string file_out, DrawMode draw_mode, ColorMode color_mode, int block_size);
   ~Scene();
 
   void input();

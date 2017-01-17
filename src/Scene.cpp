@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-Scene::Scene(int width, int height, float scale, int frame, std::string file_out, DrawMode draw_mode, ColorMode color_mode, int block_size) :
-	m_shader(width, height, draw_mode, color_mode, block_size),
+Scene::Scene(int width, int height, int length, float scale, int frame, std::string file_out, DrawMode draw_mode, ColorMode color_mode, int block_size) :
+	m_shader(width, height, length, draw_mode, color_mode, block_size),
 	m_time(QTime::currentTime())
 {
 	m_window = SDL_CreateWindow("SDL Window", /* The first parameter is the window title */
@@ -92,7 +92,7 @@ void Scene::render()
 	std::cout << "time_taken:" << renderTime << "ms" << std::endl;
 	m_frame++;
 	m_last_frame_time = m_time.elapsed();
-	if(m_frame >= 100)
+	if(m_frame >= m_shader.m_length)
 	{
 		m_active = false;
 	}

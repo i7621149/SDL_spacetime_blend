@@ -23,12 +23,13 @@ int main(int argc, char *argv[])
 		return -2;
 	}
 
-	bool save_images = false;
-	int size = 100;
-	int frame = 50;
-	std::string file_out = "out/hsv_textures";
+	bool save_images = true;
+	int size = 500;
+	int frame = 0;
+	int n_frames = 10;
+	std::string file_out = "out/closer_example";
 	int block_size = 1;
-	Scene scene(size, size, 500/size, frame, file_out, DrawMode::SIMPLE_BLEND, ColorMode::RGB, block_size);
+	Scene scene(size, size, n_frames, 500/size, frame, file_out, DrawMode::SIMPLE_CLOSEST, ColorMode::RGB, block_size);
 
 	while(scene.isActive())
 	{

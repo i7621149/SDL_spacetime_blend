@@ -25,10 +25,12 @@ enum class ColorMode
 class Shader
 {
 public:
-  Shader(int w, int h, DrawMode draw_mode, ColorMode color_mode, int block_size);
+  Shader(int w, int h, int length, DrawMode draw_mode, ColorMode color_mode, int block_size);
   ~Shader();
 
   ngl::Vec3 mainImage(ngl::Vec2 coord, int frame);
+
+  int m_length;
 
 private:
   float func1(ngl::Vec2 uv);
@@ -65,8 +67,6 @@ private:
   //ngl::Vec3 colLast(ngl::Vec2 uv, float f1, float f2);
 
   ngl::Vec2 m_resolution;
-
-  float m_speed = 0.2;
 
   SDL_Surface *m_image1;
   SDL_Surface *m_image2;
