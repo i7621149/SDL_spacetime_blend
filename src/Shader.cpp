@@ -290,7 +290,6 @@ ngl::Vec3 Shader::colClosest(ngl::Vec2 uv, float f1, float f2)
         smallest_dist_squared2 = dist_squared;
         closest_uv2 = current_uv;
       }
-
     }
   }
   ngl::Vec3 c1 = col1(closest_uv1);

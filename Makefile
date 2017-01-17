@@ -798,7 +798,8 @@ obj/Shader.o: src/Shader.cpp include/Shader.hpp \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtOpenGL/qtopenglglobal.h \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QSurfaceFormat \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qsurfaceformat.h \
-		/home/i7621149/NGL/include/ngl/Vec2.h
+		/home/i7621149/NGL/include/ngl/Vec2.h \
+		include/Shapes.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/Shader.o src/Shader.cpp
 
 obj/Shapes.o: src/Shapes.cpp include/Shapes.hpp \
