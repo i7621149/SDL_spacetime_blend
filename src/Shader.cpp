@@ -8,16 +8,22 @@
 #define INTERSECT Shapes::intersectF
 #define SUBTRACT Shapes::subtractF
 
-Shader::Shader(int w, int h, int length, DrawMode draw_mode, ColorMode color_mode, int block_size):
+Shader::Shader(int w, int h, int length, bool useDF, DrawMode draw_mode, ColorMode color_mode, int block_size):
   m_resolution(w, h)//,
   //m_image_resolution(w, h)
 {
   m_length = length;
-  m_image1 = loadSurface("textures/balls.png");
-  m_image2 = loadSurface("textures/wood.png");
+  m_image1 = loadSurface("in/img1.png");
+  m_image2 = loadSurface("in/img2.png");
   m_draw_mode = draw_mode;
   m_color_mode = color_mode;
   m_block_size = block_size;
+
+  m_DF = nullptr;
+  if(useDF)
+  {
+    m_DF = std::make_shared<DistanceField>(w, h);
+  }
 }
 
 Shader::~Shader()
@@ -28,43 +34,61 @@ Shader::~Shader()
 
 float Shader::func1(ngl::Vec2 uv)
 {
-  uv.m_y = 1 - uv.m_y;
+  float result = 0;
+  if(m_DF)
+  {
+    result = m_DF.get()->lookUp1(uv);
+  }
+  else
+  {
+    uv.m_y = 1 - uv.m_y;
 
-  ngl::Vec2 pos = ngl::Vec2(uv.m_x * 10.0 - 5.0, uv.m_y * 10.0 - 3.0);
+    ngl::Vec2 pos = ngl::Vec2(uv.m_x * 10.0 - 5.0, uv.m_y * 10.0 - 3.0);
 
-  float disk1 = 1.0 - (pos[0] - 1.0) * (pos[0] - 1.0) - pos[1] * pos[1];
-  float disk2 = 1.0 - (pos[0] + 1.5) * (pos[0] + 1.5) - pos[1] * pos[1];
-  float ddisk = UNION(disk1, disk2);
+    float disk1 = 1.0 - (pos[0] - 1.0) * (pos[0] - 1.0) - pos[1] * pos[1];
+    float disk2 = 1.0 - (pos[0] + 1.5) * (pos[0] + 1.5) - pos[1] * pos[1];
+    float ddisk = UNION(disk1, disk2);
 
-  return ddisk;
+    result = ddisk;
 
-  //float b = Shapes::box(uv-ngl::Vec2(0.5,0.5), ngl::Vec2(0.1, 0.1), 0);
-  //return b;
-  //uv -= ngl::Vec2(0.5, 0.5);
-  //float c = Shapes::circle(uv, 0.2);
-  //return c;
-  //float l = Shapes::line(uv, ngl::Vec2(0.5, 0.3), ngl::Vec2(0.7, 0.8), 0.1);
-  //return l;
+    //float b = Shapes::box(uv-ngl::Vec2(0.5,0.5), ngl::Vec2(0.1, 0.1), 0);
+    //return b;
+    //uv -= ngl::Vec2(0.5, 0.5);
+    //float c = Shapes::circle(uv, 0.2);
+    //return c;
+    //float l = Shapes::line(uv, ngl::Vec2(0.5, 0.3), ngl::Vec2(0.7, 0.8), 0.1);
+    //return l;
 
-  //uv = Shapes::translate(uv, ngl::Vec2(0.5, 0.5));
-  //uv = Shapes::rotate(uv, 0.7854);
-  //float result = Shapes::box(uv, ngl::Vec2(0.3, 0.3), 0.0);
+    //uv = Shapes::translate(uv, ngl::Vec2(0.5, 0.5));
+    //uv = Shapes::rotate(uv, 0.7854);
+    //float result = Shapes::box(uv, ngl::Vec2(0.3, 0.3), 0.0);
 
-  //return result;
+    //return result;
+  }
+  return result;
 }
 
 float Shader::func2(ngl::Vec2 uv)
 {
-  uv.m_y = 1 - uv.m_y;
+  float result = 0;
+  if(m_DF)
+  {
+   result = m_DF.get()->lookUp2(uv);
+  }
+  else
+  {
+    uv.m_y = 1 - uv.m_y;
 
-  ngl::Vec2 pos = ngl::Vec2(uv.m_x * 10.0 - 5.0, uv.m_y * 10.0 - 3.0);
+    ngl::Vec2 pos = ngl::Vec2(uv.m_x * 10.0 - 5.0, uv.m_y * 10.0 - 3.0);
 
-  float bl1 = INTERSECT(INTERSECT(INTERSECT((pos[0] + 1.0), (0.0 - pos[0])), (pos[1] - 2.0)), (5.0 - pos[1]));
-  float bl2 = INTERSECT(INTERSECT(INTERSECT((pos[1] - 3.0), (4.0 - pos[1])) , (pos[0] + 2.0)), (1.0 - pos[0]));
+    float bl1 = INTERSECT(INTERSECT(INTERSECT((pos[0] + 1.0), (0.0 - pos[0])), (pos[1] - 2.0)), (5.0 - pos[1]));
+    float bl2 = INTERSECT(INTERSECT(INTERSECT((pos[1] - 3.0), (4.0 - pos[1])) , (pos[0] + 2.0)), (1.0 - pos[0]));
 
-  float cross = UNION(bl1, bl2);
+    float cross = UNION(bl1, bl2);
 
-  return cross;
+    result = cross;
+  }
+  return result;
 }
 
 ngl::Vec3 Shader::col1(ngl::Vec2 uv)
@@ -110,10 +134,10 @@ ngl::Vec3 Shader::shade(ngl::Vec2 uv, float t)
 {
   ngl::Vec3 s = ngl::Vec3(0.0, 0.0, 0.0);
 
-  float a1 = 5.0;
-  float a2 = 2.0;
-  float a3 = 3.0;
-  float a4 = 0.75;
+  float a1 = 2.0;
+  float a2 = 3.3;
+  float a3 = 3.3;
+  float a4 = 1.9;
 
   float zwarp = t;
 
@@ -386,30 +410,38 @@ ngl::Vec3 Shader::colBlend(ngl::Vec2 uv, float f1, float f2)
   float total_w1 = 0;
   float total_w2 = 0;
 
-  for(float y = 0; y < 1; y += m_block_size/m_resolution.m_x)//1/m_image_resolution.m_y)
+  float result1 = func1(uv);
+  float result2 = func2(uv);
+
+  if(result1 < 0 || result2 < 0)
   {
-    for(float x = 0; x < 1; x += m_block_size/m_resolution.m_y)//1/m_image_resolution.m_x)
+    for(float y = 0; y < 1; y += m_block_size/m_resolution.m_x)//1/m_image_resolution.m_y)
     {
-      ngl::Vec2 current_uv(x, y);
-      float dist_squared = (uv.m_x-x)*(uv.m_x-x) + (uv.m_y-y)*(uv.m_y-y);
-      float weight = 1/(dist_squared * dist_squared);
-      if(func1(current_uv) >= 0)
+      for(float x = 0; x < 1; x += m_block_size/m_resolution.m_y)//1/m_image_resolution.m_x)
       {
-        ngl::Vec3 c = col1(current_uv);
-        total_c1 += c * weight;
-        total_w1 += weight;
-      }
-      if(func2(current_uv) >= 0)
-      {
-        ngl::Vec3 c = col2(current_uv);
-        total_c2 += c * weight;
-        total_w2 += weight;
+        ngl::Vec2 current_uv(x, y);
+        float dist_squared = (uv.m_x-x)*(uv.m_x-x) + (uv.m_y-y)*(uv.m_y-y);
+        float weight = 1/(dist_squared * dist_squared);
+        if(result1<0 && func1(current_uv) >= 0)
+        {
+          ngl::Vec3 c = col1(current_uv);
+          total_c1 += c * weight;
+          total_w1 += weight;
+        }
+        if(result2<0 && func2(current_uv) >= 0)
+        {
+          ngl::Vec3 c = col2(current_uv);
+          total_c2 += c * weight;
+          total_w2 += weight;
+        }
       }
     }
   }
-
   ngl::Vec3 c1 = total_c1 / total_w1;
   ngl::Vec3 c2 = total_c2 / total_w2;
+
+  if(result1 >= 0) c1 = col1(uv);
+  if(result2 >= 0) c2 = col2(uv);
 
   float fa1 = fabs(f1);
   float fa2 = fabs(f2);
@@ -431,6 +463,9 @@ ngl::Vec3 Shader::colBlend2(ngl::Vec2 uv, float f1, float f2)
   float total_w1 = 0;
   float total_w2 = 0;
 
+  float result1 = func1(uv);
+  float result2 = func2(uv);
+
   for(float y = 0; y < 1; y += m_block_size/m_resolution.m_x)//1/m_image_resolution.m_y)
   {
     for(float x = 0; x < 1; x += m_block_size/m_resolution.m_y)//1/m_image_resolution.m_x)
@@ -455,6 +490,9 @@ ngl::Vec3 Shader::colBlend2(ngl::Vec2 uv, float f1, float f2)
 
   ngl::Vec3 c1 = total_c1 / total_w1;
   ngl::Vec3 c2 = total_c2 / total_w2;
+
+  if(result1 >= 0) c1 = col1(uv);
+  if(result2 >= 0) c2 = col2(uv);
 
   float fa1 = fabs(f1);
   float fa2 = fabs(f2);

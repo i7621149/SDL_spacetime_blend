@@ -51,18 +51,22 @@ OBJECTS_DIR   = obj/
 SOURCES       = src/main.cpp \
 		src/Scene.cpp \
 		src/Shader.cpp \
-		src/Shapes.cpp 
+		src/Shapes.cpp \
+		src/DistanceField.cpp 
 OBJECTS       = obj/main.o \
 		obj/Scene.o \
 		obj/Shader.o \
-		obj/Shapes.o
+		obj/Shapes.o \
+		obj/DistanceField.o
 DIST          = .qmake.stash \
 		SDL_spacetime.pro include/Scene.hpp \
 		include/Shader.hpp \
-		include/Shapes.hpp src/main.cpp \
+		include/Shapes.hpp \
+		include/DistanceField.hpp src/main.cpp \
 		src/Scene.cpp \
 		src/Shader.cpp \
-		src/Shapes.cpp
+		src/Shapes.cpp \
+		src/DistanceField.cpp
 QMAKE_TARGET  = SDL_spacetime
 DESTDIR       = 
 TARGET        = SDL_spacetime
@@ -403,8 +407,8 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents include/Scene.hpp include/Shader.hpp include/Shapes.hpp $(DISTDIR)/
-	$(COPY_FILE) --parents src/main.cpp src/Scene.cpp src/Shader.cpp src/Shapes.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents include/Scene.hpp include/Shader.hpp include/Shapes.hpp include/DistanceField.hpp $(DISTDIR)/
+	$(COPY_FILE) --parents src/main.cpp src/Scene.cpp src/Shader.cpp src/Shapes.cpp src/DistanceField.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -917,6 +921,9 @@ obj/Shapes.o: src/Shapes.cpp include/Shapes.hpp \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QSurfaceFormat \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qsurfaceformat.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/Shapes.o src/Shapes.cpp
+
+obj/DistanceField.o: src/DistanceField.cpp include/DistanceField.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/DistanceField.o src/DistanceField.cpp
 
 ####### Install
 

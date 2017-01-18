@@ -43,12 +43,14 @@ QMAKE_CXXFLAGS += -std=c++0x
 SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/Scene.cpp \
           $$PWD/src/Shader.cpp \
-          $$PWD/src/Shapes.cpp
+          $$PWD/src/Shapes.cpp \
+          $$PWD/src/DistanceField.cpp
 
 # same for the .h files
 HEADERS+= $$PWD/include/Scene.hpp \
           $$PWD/include/Shader.hpp \
-          $$PWD/include/Shapes.hpp
+          $$PWD/include/Shapes.hpp \
+          $$PWD/include/DistanceField.hpp
 
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include

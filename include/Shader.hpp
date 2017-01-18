@@ -8,6 +8,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "DistanceField.hpp"
+#include <memory>
+
 enum class DrawMode
 {
 	WHITE,
@@ -25,7 +28,7 @@ enum class ColorMode
 class Shader
 {
 public:
-  Shader(int w, int h, int length, DrawMode draw_mode, ColorMode color_mode, int block_size);
+  Shader(int w, int h, int length, bool useDF, DrawMode draw_mode, ColorMode color_mode, int block_size);
   ~Shader();
 
   ngl::Vec3 mainImage(ngl::Vec2 coord, int frame);
@@ -75,6 +78,8 @@ private:
   ColorMode m_color_mode;
 
   int m_block_size;
+
+  std::shared_ptr<DistanceField> m_DF;
 };
 
 #endif//__SHADER_HPP__

@@ -2,9 +2,8 @@
 
 #include <iostream>
 
-Scene::Scene(int width, int height, int length, float scale, int frame, std::string file_out, DrawMode draw_mode, ColorMode color_mode, int block_size) :
-	m_shader(width, height, length, draw_mode, color_mode, block_size),
-	m_time(QTime::currentTime())
+Scene::Scene(int width, int height, int length, float scale, bool useDF, int frame, std::string file_out, DrawMode draw_mode, ColorMode color_mode, int block_size) :
+	m_shader(width, height, length, useDF, draw_mode, color_mode, block_size)
 {
 	m_window = SDL_CreateWindow("SDL Window", /* The first parameter is the window title */
 	                            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -31,7 +30,7 @@ Scene::Scene(int width, int height, int length, float scale, int frame, std::str
   m_active = true;
   m_frame = frame;
   m_file_out = file_out;
-	m_last_frame_time = m_time.elapsed();
+  m_old_time = SDL_GetTicks();
 }
 
 Scene::~Scene()
@@ -87,15 +86,15 @@ void Scene::render()
 	/* this tells the renderer to actually show its contents to the screen. */
 	SDL_RenderPresent(m_renderer);
 
-	int renderTime = (m_time.elapsed() - m_last_frame_time);
-	std::cout << "frame:" << m_frame << std::endl;
-	std::cout << "time_taken:" << renderTime << "ms" << std::endl;
-	m_frame++;
-	m_last_frame_time = m_time.elapsed();
 	if(m_frame >= m_shader.m_length)
 	{
 		m_active = false;
 	}
+	float renderTime = (SDL_GetTicks() - m_old_time) / 1000.0f;
+	m_frame++;
+	std::cout << "frame:" << m_frame << std::endl;
+	std::cout << "time_taken:" << renderTime << "s" << std::endl;
+	m_old_time = SDL_GetTicks();
 }
 
 void Scene::readPixel(SDL_Surface *s, int x, int y, Uint8 *r, Uint8 *g, Uint8 *b)
