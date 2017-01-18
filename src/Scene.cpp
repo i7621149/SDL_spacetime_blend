@@ -85,13 +85,13 @@ void Scene::render()
 	SDL_RenderCopy(m_renderer, m_texture, NULL, NULL);
 	/* this tells the renderer to actually show its contents to the screen. */
 	SDL_RenderPresent(m_renderer);
+	m_frame++;
 
 	if(m_frame >= m_shader.m_length)
 	{
 		m_active = false;
 	}
 	float renderTime = (SDL_GetTicks() - m_old_time) / 1000.0f;
-	m_frame++;
 	std::cout << "frame:" << m_frame << std::endl;
 	std::cout << "time_taken:" << renderTime << "s" << std::endl;
 	m_old_time = SDL_GetTicks();

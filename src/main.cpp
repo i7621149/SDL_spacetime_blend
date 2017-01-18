@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
 	int width = 512;
 	int height = 512;
-	int frame = 0;
+	int frame = 50;
 
 	// these can be user controlled
 	int n_frames = 100;

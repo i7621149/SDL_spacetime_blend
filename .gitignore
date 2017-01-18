@@ -1,4 +1,4 @@
-SDLNGL
+SDL_Spacetime
 texblend
 out/*
 Makefile
@@ -9,3 +9,4 @@ report.aux
 video/*
 *.mov
 *.mp4
+*.bmp
