@@ -43,6 +43,7 @@ private:
   ngl::Vec3 col2(ngl::Vec2 uv);
 
   ngl::Vec3 colLookup(ngl::Vec2 uv, SDL_Surface *s);
+  void colWrite(ngl::Vec2 uv, SDL_Surface *s, ngl::Vec3 c);
 
   ngl::Vec3 shade(ngl::Vec2 uv, float t);
 
@@ -63,10 +64,9 @@ private:
 
   ngl::Vec3 finalColor(ngl::Vec2 uv, float f1, float f2);
 
-  ngl::Vec3 colBlock(ngl::Vec2 uv, float f1, float f2);
-  ngl::Vec3 colBlend(ngl::Vec2 uv, float f1, float f2);
-  ngl::Vec3 colBlend2(ngl::Vec2 uv, float f1, float f2);
-  ngl::Vec3 colClosest(ngl::Vec2 uv, float f1, float f2);
+  void colBlock(ngl::Vec2 uv, float f1, float f2, ngl::Vec3 *c1, ngl::Vec3 *c2);
+  void colBlend(ngl::Vec2 uv, float f1, float f2, ngl::Vec3 *c1, ngl::Vec3 *c2);
+  void colClosest(ngl::Vec2 uv, float f1, float f2, ngl::Vec3 *c1, ngl::Vec3 *c2);
   //ngl::Vec3 colLast(ngl::Vec2 uv, float f1, float f2);
 
   ngl::Vec2 m_resolution;

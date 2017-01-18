@@ -179,13 +179,13 @@ SDL_Surface* DistanceField::loadSurface(std::string path)
     printf("Unable to load image %s! SDL_image Error: %s\n", path.c_str(), IMG_GetError());
     exit(EXIT_FAILURE);
   }
-  /*
+
   if(loadedSurface->w != m_w || loadedSurface->h != m_h)
   {
-    printf("Image %s does not match input resolution!\n", path.c_str());
-    printf("input resolution is %d x %d!\n", m_w, m_h);
-    exit(EXIT_FAILURE);
+    printf("WARNING: Image %s does not match input resolution!\n\n", path.c_str());
+    printf("program resolution is %d x %d!\n", m_w, m_h);
+    printf("image resolution is %d x %d!\n", loadedSurface->w, loadedSurface->h);
+    printf("use -w XXX and -h XXX to set resolution!\n\n");
   }
-  */
   return loadedSurface;
 }

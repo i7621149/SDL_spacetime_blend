@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	int n_frames = 100;
 	int block_size = 1;
 	std::string file_out;
-	DrawMode draw_mode = DrawMode::WHITE;
+	DrawMode draw_mode = DrawMode::SIMPLE_BLEND;
 	ColorMode color_mode = ColorMode::RGB;
 
   int c;

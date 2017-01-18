@@ -118,6 +118,21 @@ ngl::Vec3 Shader::colLookup(ngl::Vec2 uv, SDL_Surface *s)
   return c;
 }
 
+void Shader::colWrite(ngl::Vec2 uv, SDL_Surface *s, ngl::Vec3 c)
+{
+  int x = uv.m_x * s->w;
+  int y = uv.m_y * s->h;
+  Uint8 r = 0;
+  Uint8 g = 0;
+  Uint8 b = 0;
+
+  SDL_GetRGB(((Uint32 *)s->pixels)[x + y * s->w], s->format, &r, &g, &b);
+  if(std::max(r, std::max(g, b)) < 1)
+  {
+    ((Uint32 *)s->pixels)[x + y * s->w] = SDL_MapRGB(s->format, c.m_r*255, c.m_g*255, c.m_b*255);
+  }
+}
+
 ngl::Vec3 Shader::mainImage(ngl::Vec2 coord, int frame)
 {
   ngl::Vec2 uv = coord / m_resolution;
@@ -366,29 +381,34 @@ SDL_Surface* Shader::loadSurface(std::string path)
 ngl::Vec3 Shader::finalColor(ngl::Vec2 uv, float f1, float f2)
 {
   ngl::Vec3 s;
-  switch (m_draw_mode) {
-  case DrawMode::WHITE:
-    s = ngl::Vec3(1,1,1);
-    break;
-  case DrawMode::BLOCK_COLOR:
-    s = colBlock(uv, f1, f2);
-    break;
-  case DrawMode::SIMPLE_BLEND:
-    s = colBlend(uv, f1, f2);
-    break;
-  case DrawMode::SIMPLE_CLOSEST:
-    s = colClosest(uv, f1, f2);
-    break;
-  default:
-    break;
-  }
-  return s;
-}
 
-ngl::Vec3 Shader::colBlock(ngl::Vec2 uv, float f1, float f2)
-{
   ngl::Vec3 c1 = col1(uv);
   ngl::Vec3 c2 = col2(uv);
+  ngl::Vec3 zero(0,0,0);
+
+  if(c1 == zero || c2 == zero)
+  {
+    switch (m_draw_mode)
+    {
+    case DrawMode::WHITE:
+      if(c1 == zero) c1 = ngl::Vec3(1,1,1);
+      if(c2 == zero) c2 = ngl::Vec3(1,1,1);
+      break;
+    case DrawMode::BLOCK_COLOR:
+      colBlock(uv, f1, f2, &c1, &c2);
+      break;
+    case DrawMode::SIMPLE_BLEND:
+      colBlend(uv, f1, f2, &c1, &c2);
+      break;
+    case DrawMode::SIMPLE_CLOSEST:
+      colClosest(uv, f1, f2, &c1, &c2);
+      break;
+    default:
+      break;
+    }
+    colWrite(uv, m_image1, c1);
+    colWrite(uv, m_image2, c2);
+  }
 
   float fa1 = fabs(f1);
   float fa2 = fabs(f2);
@@ -397,11 +417,17 @@ ngl::Vec3 Shader::colBlock(ngl::Vec2 uv, float f1, float f2)
   float w1 = fa2/fsum;
   float w2 = fa1/fsum;
 
-  ngl::Vec3 s = c1 * w1 + c2 * w2;
+  s = c1 * w1 + c2 * w2;
   return s;
 }
 
-ngl::Vec3 Shader::colBlend(ngl::Vec2 uv, float f1, float f2)
+void Shader::colBlock(ngl::Vec2 uv, float f1, float f2, ngl::Vec3 *c1, ngl::Vec3 *c2)
+{
+  *c1 = col1(uv);
+  *c2 = col2(uv);
+}
+
+void Shader::colBlend(ngl::Vec2 uv, float f1, float f2, ngl::Vec3 *c1, ngl::Vec3 *c2)
 {
   //return ngl::Vec3(1.0, 0.0, 0.0);
   ngl::Vec3 total_c1(0.0, 0.0, 0.0);
@@ -437,76 +463,11 @@ ngl::Vec3 Shader::colBlend(ngl::Vec2 uv, float f1, float f2)
       }
     }
   }
-  ngl::Vec3 c1 = total_c1 / total_w1;
-  ngl::Vec3 c2 = total_c2 / total_w2;
-
-  if(result1 >= 0) c1 = col1(uv);
-  if(result2 >= 0) c2 = col2(uv);
-
-  float fa1 = fabs(f1);
-  float fa2 = fabs(f2);
-
-  float fsum = fa1 + fa2;
-  float w1 = fa2/fsum;
-  float w2 = fa1/fsum;
-
-  ngl::Vec3 s = c1 * w1 + c2 * w2;
-  return s;
+  *c1 = total_c1 / total_w1;
+  *c2 = total_c2 / total_w2;
 }
 
-ngl::Vec3 Shader::colBlend2(ngl::Vec2 uv, float f1, float f2)
-{
-  //return ngl::Vec3(1.0, 0.0, 0.0);
-  ngl::Vec3 total_c1(0.0, 0.0, 0.0);
-  ngl::Vec3 total_c2(0.0, 0.0, 0.0);
-
-  float total_w1 = 0;
-  float total_w2 = 0;
-
-  float result1 = func1(uv);
-  float result2 = func2(uv);
-
-  for(float y = 0; y < 1; y += m_block_size/m_resolution.m_x)//1/m_image_resolution.m_y)
-  {
-    for(float x = 0; x < 1; x += m_block_size/m_resolution.m_y)//1/m_image_resolution.m_x)
-    {
-      ngl::Vec2 current_uv(x, y);
-      float dist_squared = (uv.m_x-x)*(uv.m_x-x) + (uv.m_y-y)*(uv.m_y-y);
-      float weight = 1/(dist_squared * dist_squared);
-      if(func1(current_uv) >= 0)
-      {
-        ngl::Vec3 c = col1(current_uv);
-        total_c1 += c * weight;
-        total_w1 += weight;
-      }
-      if(func2(current_uv) >= 0)
-      {
-        ngl::Vec3 c = col2(current_uv);
-        total_c2 += c * weight;
-        total_w2 += weight;
-      }
-    }
-  }
-
-  ngl::Vec3 c1 = total_c1 / total_w1;
-  ngl::Vec3 c2 = total_c2 / total_w2;
-
-  if(result1 >= 0) c1 = col1(uv);
-  if(result2 >= 0) c2 = col2(uv);
-
-  float fa1 = fabs(f1);
-  float fa2 = fabs(f2);
-
-  float fsum = fa1 + fa2;
-  float w1 = fa2/fsum;
-  float w2 = fa1/fsum;
-
-  ngl::Vec3 s = c1 * w1 + c2 * w2;
-  return s;
-}
-
-
-ngl::Vec3 Shader::colClosest(ngl::Vec2 uv, float f1, float f2)
+void Shader::colClosest(ngl::Vec2 uv, float f1, float f2, ngl::Vec3 *c1, ngl::Vec3 *c2)
 {
   float smallest_dist_squared1 = 10000;
   ngl::Vec2 closest_uv1;
@@ -530,18 +491,8 @@ ngl::Vec3 Shader::colClosest(ngl::Vec2 uv, float f1, float f2)
       }
     }
   }
-  ngl::Vec3 c1 = col1(closest_uv1);
-  ngl::Vec3 c2 = col2(closest_uv2);
-
-  float fa1 = fabs(f1);
-  float fa2 = fabs(f2);
-
-  float fsum = fa1 + fa2;
-  float w1 = fa2/fsum;
-  float w2 = fa1/fsum;
-
-  ngl::Vec3 s = c1 * w1 + c2 * w2;
-  return s;
+  *c1 = col1(closest_uv1);
+  *c2 = col2(closest_uv2);
 }
 /*
 ngl::Vec3 Shader::colLast(ngl::Vec2 uv, float f1, float f2)
