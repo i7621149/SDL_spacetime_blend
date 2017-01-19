@@ -1,6 +1,8 @@
 #include "Shader.hpp"
 
 #include <cmath>
+#include <fstream>
+#include <iostream>
 
 #include "Shapes.hpp"
 
@@ -9,8 +11,7 @@
 #define SUBTRACT Shapes::subtractF
 
 Shader::Shader(int w, int h, int length, bool useDF, DrawMode draw_mode, ColorMode color_mode, int block_size):
-  m_resolution(w, h)//,
-  //m_image_resolution(w, h)
+  m_resolution(w, h)
 {
   m_length = length;
   m_image1 = loadSurface("in/img1.png");
@@ -24,6 +25,18 @@ Shader::Shader(int w, int h, int length, bool useDF, DrawMode draw_mode, ColorMo
   {
     m_DF = std::make_shared<DistanceField>(w, h);
   }
+
+  std::ifstream config_file("config.txt");
+  config_file >> m_a[0];
+  config_file >> m_a[1];
+  config_file >> m_a[2];
+  config_file >> m_a[3];
+  std::cout << std::endl << "Control variables:" << std::endl;
+  for(int i=0; i<4; i++)
+  {
+    std::cout << "    a" << i << ":" << m_a[i] << std::endl;
+  }
+  std::cout << std::endl;
 }
 
 Shader::~Shader()
@@ -149,10 +162,10 @@ ngl::Vec3 Shader::shade(ngl::Vec2 uv, float t)
 {
   ngl::Vec3 s = ngl::Vec3(0.0, 0.0, 0.0);
 
-  float a1 = 2.0;
-  float a2 = 3.3;
-  float a3 = 3.3;
-  float a4 = 1.9;
+  float a1 = m_a[0];
+  float a2 = m_a[1];
+  float a3 = m_a[2];
+  float a4 = m_a[3];
 
   float zwarp = t;
 

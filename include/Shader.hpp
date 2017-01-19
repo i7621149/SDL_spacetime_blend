@@ -80,6 +80,7 @@ private:
   int m_block_size;
 
   std::shared_ptr<DistanceField> m_DF;
+  float m_a[4];
 };
 
 #endif//__SHADER_HPP__

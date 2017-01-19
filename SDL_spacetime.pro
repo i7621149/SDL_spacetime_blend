@@ -52,6 +52,8 @@ HEADERS+= $$PWD/include/Scene.hpp \
           $$PWD/include/Shapes.hpp \
           $$PWD/include/DistanceField.hpp
 
+OTHER_FILES += $$PWD/config.txt
+
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include
 # where our exe is going to live (root of project)

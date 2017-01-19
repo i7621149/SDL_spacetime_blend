@@ -39,12 +39,12 @@ int main(int argc, char *argv[])
 	int n_frames = 100;
 	int block_size = 1;
 	std::string file_out;
-	DrawMode draw_mode = DrawMode::SIMPLE_BLEND;
+	DrawMode draw_mode = DrawMode::WHITE;
 	ColorMode color_mode = ColorMode::RGB;
 
   int c;
   opterr = 0;
-  while ((c = getopt (argc, argv, "o:d:c:b:n:w:h:")) != -1)
+  while ((c = getopt(argc, argv, "o:d:c:b:n:w:h:")) != -1)
   switch (c)
   {
   case 'o':
@@ -84,10 +84,10 @@ int main(int argc, char *argv[])
     else if (optopt == 'h')
       fprintf (stderr, "Option -%c requires a height int argument.\n", optopt);
     else if (isprint (optopt))
-      fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+      fprintf (stderr, "Unknown option `-%c'.\nRefer to the user manual for help\n", optopt);
     else
       fprintf (stderr,
-               "Unknown option character `\\x%x'.\n",
+               "Unknown option character `\\x%x'.\nRefer to the user manual for help\n",
                optopt);
     return 1;
   default:
@@ -96,15 +96,15 @@ int main(int argc, char *argv[])
 
   if(file_out.empty())
   {
-    printf("\nNo Output File Specified.\n\n  !!!!!!!!!!!!!!!!!!!!!!!!\n  IMAGES WILL NOT BE SAVED\n  !!!!!!!!!!!!!!!!!!!!!!!!\n\nUse '-o filename' to write image files out\n\n");
+    printf("\nWARNING: No Output File Specified.\n\n  !!!!!!!!!!!!!!!!!!!!!!!!\n  IMAGES WILL NOT BE SAVED\n  !!!!!!!!!!!!!!!!!!!!!!!!\n\nUse '-o filename' to write image files out\n\n");
   }
   if(draw_mode == DrawMode::SIMPLE_BLEND || draw_mode == DrawMode::SIMPLE_CLOSEST)
   {
-    printf("You have chosen an expensive colour blend operation. It is recommended you preview the output first using '-d white'\n\n");
+    printf("WARNING: You have chosen an expensive colour blend operation.\n         It is recommended you preview the output first using '-d white'\n         The current operation will take some time to calculate on more complex frames.\n\n");
   }
   printf("---------------------\n");
   for (int index = optind; index < argc; index++)
-    printf ("Non-option argument %s\n", argv[index]);
+    printf ("Non-option argument %s\nRefer to the user manual for helpn\n", argv[index]);
 
   Scene scene(width, height, n_frames, 512.0/std::min(width, height), true, frame, file_out, draw_mode, color_mode, block_size);
 
