@@ -15,6 +15,7 @@ public:
 
   static float intersectF(float a, float b);
   static float unionF(float a, float b);
+  static float subtractF(float a, float b);
 
   static ngl::Vec2 abs(ngl::Vec2 v);
   static ngl::Vec2 max(ngl::Vec2 a, float b);

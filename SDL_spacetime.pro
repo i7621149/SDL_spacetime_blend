@@ -33,16 +33,26 @@ MOC_DIR=moc
 # on a mac we don't create a .app bundle file ( for ease of multiplatform use)
 CONFIG-=app_bundle
 
+# With C++11 support
+greaterThan(QT_MAJOR_VERSION, 4){
+CONFIG += c++11
+} else {
+QMAKE_CXXFLAGS += -std=c++0x
+}
 # Include all .cpp files in the project src directory
 SOURCES+= $$PWD/src/main.cpp \
           $$PWD/src/Scene.cpp \
           $$PWD/src/Shader.cpp \
-          $$PWD/src/Shapes.cpp
+          $$PWD/src/Shapes.cpp \
+          $$PWD/src/DistanceField.cpp
 
 # same for the .h files
-HEADERS+= $$PWD/include/Scene.hpp \
-          $$PWD/include/Shader.hpp \
-          $$PWD/include/Shapes.hpp
+HEADERS+=$$PWD/include/Scene.hpp \
+         $$PWD/include/Shader.hpp \
+         $$PWD/include/Shapes.hpp \
+         $$PWD/include/DistanceField.hpp
+
+OTHER_FILES+=$$PWD/config.txt
 
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include

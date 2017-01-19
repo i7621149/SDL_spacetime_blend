@@ -72,6 +72,11 @@ float Shapes::intersectF(float a, float b)
   return a + b - std::sqrt(a * a + b * b);
 }
 
+float Shapes::subtractF(float a, float b)
+{
+  return intersectF(a, -b);
+}
+
 ngl::Vec2 Shapes::abs(ngl::Vec2 v)
 {
 	v.m_x = fabs(v.m_x);

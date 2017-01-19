@@ -6,14 +6,13 @@
 #include <array>
 #include <vector>
 #include <string>
-#include <QTime>
 
 #include "Shader.hpp"
 
 class Scene
 {
 public:
-  Scene(int width, int height, float scale, int frame, std::string file_out, DrawMode draw_mode);
+  Scene(int width, int height, int length, float scale, bool useDF, int frame, std::string file_out, DrawMode draw_mode, ColorMode color_mode, int block_size);
   ~Scene();
 
   void input();
@@ -47,8 +46,7 @@ private:
   bool m_active;
   int m_frame;
 
-  QTime m_time;
-  int m_last_frame_time;
+  Uint32 m_old_time;
 
   std::string m_file_out;
 };
