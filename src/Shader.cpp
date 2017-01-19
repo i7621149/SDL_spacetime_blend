@@ -437,10 +437,6 @@ void Shader::colBlend(ngl::Vec2 uv, float f1, float f2, ngl::Vec3 *c1, ngl::Vec3
   float total_w2 = 0;
   float result1 = func1(uv);
   float result2 = func2(uv);
-
-  *c1 = colLookup(uv, m_image1);
-  *c2 = colLookup(uv, m_image2);
-
   if(result1 < 0 || result2 < 0)
   {
     for(float y = 0; y < 1; y += m_block_size/m_resolution.m_x)//1/m_image_resolution.m_y)
@@ -475,6 +471,7 @@ void Shader::colClosest(ngl::Vec2 uv, float f1, float f2, ngl::Vec3 *c1, ngl::Ve
   ngl::Vec2 closest_uv1;
   float smallest_dist_squared2 = 10000;
   ngl::Vec2 closest_uv2;
+
   for(float y = 0; y < 1; y += m_block_size/m_resolution.m_x)//1/m_image_resolution.m_y)
   {
     for(float x = 0; x < 1; x += m_block_size/m_resolution.m_y)//1/m_image_resolution.m_x)
