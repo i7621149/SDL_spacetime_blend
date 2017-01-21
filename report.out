@@ -1,0 +1,17 @@
+\BOOKMARK [1][-]{section.1}{Abstract}{}% 1
+\BOOKMARK [1][-]{section.2}{Introduction}{}% 2
+\BOOKMARK [1][-]{section.3}{Background and Alternative Approaches to Metamorphosis}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Image Prediction}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{Texture Synthesis / Wave Function Collapse}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.3}{Alternative Approaches}{section.3}% 6
+\BOOKMARK [2][-]{subsection.3.4}{FRep Solids and Heterogeneous Objects}{section.3}% 7
+\BOOKMARK [1][-]{section.4}{Development}{}% 8
+\BOOKMARK [2][-]{subsection.4.1}{Single Colours}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.2}{Partitions and Texturing}{section.4}% 10
+\BOOKMARK [2][-]{subsection.4.3}{Alternative Colour Calculation Method}{section.4}% 11
+\BOOKMARK [1][-]{section.5}{Image to SDF Conversion}{}% 12
+\BOOKMARK [2][-]{subsection.5.1}{8SSEDT Algorithm}{section.5}% 13
+\BOOKMARK [2][-]{subsection.5.2}{Further development}{section.5}% 14
+\BOOKMARK [1][-]{section.6}{Conclusion}{}% 15
+\BOOKMARK [1][-]{section.7}{Appendix}{}% 16
+\BOOKMARK [2][-]{subsection.7.1}{2D Shapes, Operations and Transformations}{section.7}% 17

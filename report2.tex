@@ -25,15 +25,19 @@
 	\date{23rd January 2017}
 	\author{Felix Marrington-Reeve}
 	\maketitle
+	\newline
 	\ifpicture
 	\begin{figure}[h!]
-	\center{\includegraphics[width=0.3\linewidth]{fish_evolve_1.png}  \includegraphics[width=0.3\linewidth]{fish_evolve_2.png}  \includegraphics[width=0.3\linewidth]{fish_evolve_3.png}}
-	\center{\includegraphics[width=0.3\linewidth]{fish_evolve_4.png}  \includegraphics[width=0.3\linewidth]{fish_evolve_5.png}  \includegraphics[width=0.3\linewidth]{fish_evolve_6.png}}
-	\center{\includegraphics[width=0.3\linewidth]{fish_evolve_7.png}  \includegraphics[width=0.3\linewidth]{fish_evolve_8.png}  \includegraphics[width=0.3\linewidth]{fish_evolve_9.png}}
+	\begin{center}
+		\includegraphics[width=0.3\linewidth]{fish_evolve_1.png} \includegraphics[width=0.3\linewidth]{fish_evolve_2.png} \includegraphics[width=0.3\linewidth]{fish_evolve_3.png}\\
+		\includegraphics[width=0.3\linewidth]{fish_evolve_4.png} \includegraphics[width=0.3\linewidth]{fish_evolve_5.png} \includegraphics[width=0.3\linewidth]{fish_evolve_6.png}\\
+		\includegraphics[width=0.3\linewidth]{fish_evolve_7.png} \includegraphics[width=0.3\linewidth]{fish_evolve_8.png} \includegraphics[width=0.3\linewidth]{fish_evolve_9.png}\\
+	\end{center}
 	%\caption{Blend from a user defined drawing, including shape and texture}
 	\label{fig:fish}
 	\end{figure}
 	\fi
+	\newline
 	\center{Supervisor: Valery Adzhiev}
 	\newpage
 	\tableofcontents
@@ -108,7 +112,7 @@ Techniques for Enhancing Motion Dynamics in Key Frame Animation \hl{https://pdfs
 A more modern solution can be found in Correspondence Specification Learned From Master Frames for Automatic Inbetweening (Jin and Geng) \hl{[link to Jin and Gen]} present an approach for automatic in betweens that relies on creating a 3D model from a front-view and side-view of a character, and on having accurate drawings of the 2D character in order to create correspondence between strokes. The strokes can be incorrectly annotated and there is no option for transitioning between radically different images such as drawings with radically different strokes or shapes.
 
 \subsection{FRep Solids and Heterogeneous Objects}
-An implicit shape can be represented by either $F(x, y)$ for 2D shapes or $F(x, y, z)$ for 3D shapes, where on the defining curve or surface $F(x, y) = 0$ in 2D or $F(x, y, z) = 0$ in 3D. An FRep solid is defined by primitives and operations, where $F \leq 0$. In [Space-time blending] Pasko et al. put forward a method which converts two $k$ dimensional input shapes into $(k+1)$ dimensional shapes in order to blend between them in the higher dimension. This allows inbetween models that do not rely on matching topology of the two inputs, due to their functional representation. In 2D:
+An implicit shape can be represented by either $F(x, y)$ for 2D shapes or $F(x, y, z)$ for 3D shapes, where on the defining curve or surface $F(x, y) = 0$ in 2D or $F(x, y, z) = 0$ in 3D. An FRep solid is defined by primitives and operations, where $F \leq 0$. In [Space-time blending] Pasko et al. put forward a method which converts two $k$ dimensional input shapes into $(k+1)$ dimensional shapes in order to blend between them in the higher dimension. This allows inbetween models that do not rely on matching topology of the two inputs, due to their functional representation \cite{hyperfun}. In 2D:
 
 \textbf{Two shapes are given using the x,y plane\\
 Each shape is used as a cross section of a half cylinder in 3D space, by extending them in the z dimension, with space inbetween for the blend\\
@@ -129,10 +133,10 @@ Heterogeneous objects which include both the shape and attributes of the object,
 The work of \hl{PASKOV ETC} is implemented in the following section, followed by an implementation of the paper's theoretical method for blending between textures. 
 
 \section{Development}
-I began to implement a similar set of 2D functions to the FRep program HyperFun \hl{[LINK]} in my own program, using C++. This began with a simple program in which functions can be written in GLSL to create a boolean image of the signed distance field that it creates. This allows an input of time to blend between two functions using the methods put forward in \hl{Real-Time Space-Time Blending with Improved User Control}, with a series of black and white output images.
+I began to implement a similar set of 2D functions to the FRep program HyperFun \hl{[LINK]} in my own program, using C++. This began with a simple program in which functions can be written in GLSL to create a boolean image of the signed distance field that it creates. This allows an input of time to blend between two functions using the methods put forward in \cite{controlled blending}, with a series of black and white output images.
 
 \subsection{Single Colours}
-Colours can be blended between using a simple \hl{transfinite interpolation ??} between the two initial states, where pixels’ colours are weighted by the absolute value of $f_{1}$ and $f_{2}$:
+Colours can be blended between using a simple \hl{transfinite interpolation ??} interpolation between the two initial states, where pixels’ colours are weighted by the absolute value of $f_{1}$ and $f_{2}$:
 
 \begin{equation*}
 c(t) = w_{1}(t) \cdot c_{1} + w_{2}(t) \cdot c_{2}
@@ -175,12 +179,12 @@ Another option in the program is to use a lower resolution version than the text
 \hl{images}
 
 \section{Image to SDF Conversion}
-One area that \hl{Paskov et al} do not seem to have explored is the creation of Signed-Distance Fields from methods other than functions. As such, it is difficult to argue for the use of space-time blending, since it requires that shapes be defined by functional representations, which are often unintuitive without specialist software to create them. The 8SSEDT algorithm from \hl{A Note on Fast Raster Scan Distance Propagation on the Discrete Rectangular Lattice} is implemented, which takes a boolean raster grid and uses it to create a SDF.
+One area that \hl{Pasko et al} do not seem to have explored is the creation of Signed-Distance Fields from methods other than functions. As such, it is difficult to argue for the use of space-time blending, since it requires that shapes be defined by functional representations, which are often unintuitive without specialist software to create them. The 8SSEDT algorithm from \hl{A Note on Fast Raster Scan Distance Propagation on the Discrete Rectangular Lattice} is implemented, which takes a boolean raster grid and uses it to create a SDF.
 
 This allows the user to draw an image with a black background for \textit{outside} the object and use textures of their choosing for \textit{inside} the object. This method is implemented to allow a more artist-friendly appraoch to creating the two keyframes of the blend. This algorithm is easy to incorporate into an FRep model as instead of using functions to create the implicit shape, a $SDF(x, y)$ function can be implemented which can be used to look up values once the SDF is generated. The result of this is the ability to generate non-trivial blends more easily, and it the implementation is entirely new for space-time blending.
 
 \subsection{8SSEDT Algorithm}
-The 8SSEDT algorithm is created by \hl{[REFERENCE]} and improved by Richard Mitton \hl{http://www.codersnotes.com/notes/signed-distance-fields/}
+The 8SSEDT or \textit{8-Points Signed Sequential Euclidean Distance Transformation} algorithm is created by \hl{[REFERENCE]} and improved by Richard Mitton \hl{http://www.codersnotes.com/notes/signed-distance-fields/}
 
 \hl{ALGORITHM}
 
@@ -191,13 +195,21 @@ In order to further improve the system it would be beneficial to integrate the f
 
 A method has been presented and implemented for allowing a blend between two raster images, that is not dependent on correspondence of attributes between them. It is the first implementation of the effect, and the first combination of converting images to signed-distance fields and then blending between them. The ability to use the closest point on the surface of the original shape is a new approach that, while simple, may have uses in 3 dimensions in particular in order to create a more intuitive surface of a model while it is going through space-time blending. The program is implemented in a user-friendly way that does not require functional representation of the shapes involved to create a blend, which I also believe to be the first implementation of the space-time blend using raster images.
 
+
+
 \begin{thebibliography}{2}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{hyperfun}
+Adzhiev, V. and Pasko, P., 2004. Function-based shape modelling: mathematical framework and specialised language. \emph{Automated Deduction in Geometry} [online]. Available from: \url{http://link.springer.com/chapter/10.1007/978-3-540-24616-9_9}
+
+\bibitem{8SSEDT}
+Leymarie, F. and Levine, M. D., 1992. A Note on “Fast Raster Scan Distance Propagation on the Discrete Rectangular Lattice”. \emph{CVGIP-IU, Vol 55(1), pp 84-94}.
+
 \bibitem{space-time blending}
 Pasko, G., Pasko, A., and Kunii, T., 2004. Space-time Blending. \emph{Computer Animation and Virtual Worlds} [online]. Available from: \url{http://onlinelibrary.wiley.com/doi/10.1002/cav.12/abstract}
-%first paper introducing the idea of space-time blending of frep solids
-%lots of detailed explanation of process and implementation
+
+\bibitem{controlled blending}
+Pasko, G., Kravtsov, D.,  and Pasko, A., 2010. Real-Time Space-Time Blending with Improved User Control. \emph{Motion in Games} [online]. Available from: \url{http://link.springer.com/chapter/10.1007/978-3-642-16958-8_15}
 
 \end{thebibliography}
 

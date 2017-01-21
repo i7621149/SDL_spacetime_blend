@@ -1,0 +1,811 @@
+\documentclass[10pt]{article}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{bm}
+\linespread{1.2}
+\graphicspath{{images/}}
+\usepackage{color}
+\usepackage{soul}
+\usepackage{tabto}
+\usepackage[autostyle]{csquotes} 
+\usepackage[toc,page]{appendix}
+\usepackage{amsmath}
+\usepackage[font=footnotesize,labelfont=bf]{caption}
+
+\usepackage{caption}
+%\captionsetup[figure]{labelformat=empty}
+
+\definecolor{gray}{rgb}{0.9,0.9,0.9}
+\lstset{
+	breaklines=true,
+	backgroundcolor=\color{gray},
+    tabsize=2
+}
+
+
+\newif
+\ifpicture
+
+\picturetrue
+
+
+\begin{document}
+
+\begin{titlepage}
+\center
+
+\textsc{\LARGE A New Approach for the Creation of Static and Dynamic Sculptures in Cubist Style}\\[1.5cm]
+
+\hl{[Descriptive image to represent the project]}
+
+\begin{minipage}{0.5\textwidth}
+\begin{flushleft} \large
+Quentin Corker-Marin
+
+i7624405
+
+CVA level 6
+\newline
+
+Supervisor: Valery Adzhiev
+\end{flushleft}
+\end{minipage}
+
+\begin{abstract}
+The objective of this paper is to explore, create and combine novel modelling, animation and rendering techniques allowing for the creation of static and dynamic sculptures in a cubist style. The techniques discussed are rendering from a spherical camera to achieve multiple perspective projection, a novel method for faceting and transforming 3d geometry with an octree and using space-time blending to create animated sculptures. The techniques are implemented in the dcc application Houdini with artist friendly user interfaces and experimental results are presented for each technique individually, and when combined.
+\end{abstract}
+
+\newpage
+
+\tableofcontents
+
+\end{titlepage}
+
+\section{Introduction}
+Cubist painters moved away from the traditional methods of projecting a 3d scene onto a 2d canvas, instead experimenting with using multiple viewpoints in a single composition. This revealed more about the subject of the painting, maintaining interesting elements of the 3d space in their 2d representation. Similarly, Cubist sculptors achieved this effect by shifting view points and transforming volumes, producing shapes reminiscent of non-euclidian geometry.
+
+The theme of taking an $n$ dimensional object or scene and reducing it to an $n-1$ dimensional representation that maintains interesting information is explored in 3 key areas in this paper: modelling, animation and rendering. The modelling system is a novel approach that involves producing a secondary representation of the mesh in an octree, generating transformations for each leaf node in the tree, then manipulating the original mesh using these transformations. The animation system utilises space time blending, a well developed technique that is based on the function representation (FRep) of geometric models. The rendering system is an implementation of a technique using spherical and cylindrical cameras to render a scene from several different perspectives, with techniques for faceting the image to produce cubist effects.
+
+By producing these effects in a computer, parameters can be attached that allow them to be driven by time or hand animated curves, allowing for greater artistic control and the production of dynamic sculptures for use in motion graphics and films. The artist is also able to rapidly develop prototypes for larger sculptures with the potential for 3d printing the products as stand alone pieces, or as part of a sequence of stills from an animation, showing a growth and development of the artistic artefact.
+
+In this report, an overview of each of the 3 process is given, the implementation is outlined and the user interface is discussed. A more detailed description of the specific nodes used and the reasons for various implementation decisions is explained in the accompanying video.
+
+\section{Related Works}
+Due to the wide scope of this research, there is a large amount of work related to the topics discussed in this paper. Robbin, in \emph{Shadows of Reality}, draws the readers attention to parallels between cubism and 4-dimensional space, $n$-dimensional space and non-euclidian geometries. He highlights similarities between diagrams illustrating 4 dimensional platonic solids in Esprit Jouffret's \emph{Trait\'{e} \'{e}l\'{e}mentaire de g\'{e}om\'{e}trie \`{a} quatre dimensions}(1903) and Picasso's portrait of Ambroise Vollard(1910) shown in \emph{fig.} \ref{fig:vollard comparison}\cite{shadows}. This became inspiration for using space-time blending in 4 dimensions to reproduce themes of cubism in this research.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.4\linewidth]{vollard.jpeg}\includegraphics[width=0.35\linewidth]{Jouffret.png}}
+\caption{\textbf{Left:} Portrait of Ambroise Vollard(1910) by Picasso. \textbf{Right:} An illustration from \emph{Trait\'{e} \'{e}l\'{e}mentaire de g\'{e}om\'{e}trie \`{a} quatre dimensions}(1903).}
+\label{fig:vollard comparison}
+\end{figure}
+\fi
+
+\subsection{2-Dimensional Cubist Effects}
+There is a large amount of literature on the topic of reproducing cubist styles from images. Work by Collomosse and Hall focus on manipulating 2-dimensional images to produce cubist effects. They analyse image saliency to produce painterly effects in \cite{painterly rendering} and later go on to develop the process to produce cubist styles in \cite{painterly cubist rendering}. Collomosse et al later go on to describe an approach to non-photorealistic rendering that involves fitting geometric shapes to images to preserve salient details\cite{arty shapes}. All of these approaches work on a pre-rendered image to produce cubist effects.
+
+\subsection{Multi-Perspective Rendering Techniques}
+Analytical cubists used a multiple-viewpoints approach in their work and to reproduce this with a computer, the algorithm must have access to the 3d scene. Singh suggests a system for placing \lq\lq exploratory cameras\rq\rq in a scene and the final rendered image is influenced both directionally and positionally by these cameras to produce a continuous image that shows a warped view of the model from different perspectives\cite{fresh perspective}. Glassner describes several approaches to multi-perspective cubist rendering. Firstly with \lq\lq putty cameras\rq\rq where the film and the lens are represented by  2D parametrised surfaces (NURBS, Bezier or subdivision surfaces) and secondly with a system for defining a set of cameras and regions of interest within each of the camera views; a final image is rendered that combines these regions of interest and, when outside one of these regions, interpolates the rays cast between the different cameras. Wang et al suggest a different approach that uses a greedy algorithm to select salient views of a mesh and then duplicate and transform the mesh to align the different views selected by the algorithm\cite{wang}. Arpa et al introduce the idea of spherical and cylindrical camera models, to render a scene from a single camera that casts rays in from a surface\cite{arpa}. They go on to suggest methods for faceting the view based on saliency from the camera and applying artistic effects to produce multi-perspective cubist style renderings\cite{arpa}.
+
+\subsection{Function Representation and the HyperFun Project}
+Function representation and functional modelling are well researched topics developed by Pasko et al\cite{hyperfun framework} where objects are implicitly defined with functions where for a given mesh $M$, its defining function is:
+\[
+f(x) = \begin{cases} >= 0, & \mbox{if } x \in M\\ <0, & \mbox{if } x \not\in M \end{cases}
+\]
+The idea of performing bounded blending in 4 dimensional space-time was suggested by Pasko et al in \cite{space-time blending 1}. Further developments of space-time blending including speed and more advanced user controls were lated developed in \cite{space-time blending 2}. The underlying mathematics and techniques of function representation are developed by the HyperFun project team. HyperFun is an international free software project on functionally based shape modelling, visualisation and animation $\langle$\url{http://www.hyperfun.org}$\rangle$. The HyperFun team have also done research into using Frep technology to reproduce and augment artworks by Escher\cite{reproducing escher} and Russian artist Igor Selznev\cite{augmented sculpture} and producing models with complex internal structure and texture\cite{materials}.
+
+\section{Houdini as a Host Application}
+Houdini is a professional and widely used application in the visual effects and games industry developed by Side Effects software\cite{sidefx}. It uses a procedural node based workflow and has the toolset for a full production pipeline from modelling and texturing, to rendering with it's custom renderer, Mantra, and compositing final frames. Houdini allows the user to create their own custom nodes in a number of ways. If speed is required, the user can use the Houdini sdk $\langle$\url{https://www.sidefx.com/docs/hdk15.5/}$\rangle$ to write their own nodes and expressions in c++. Python is also available within Houdini $\langle$\url{http://www.sidefx.com/docs/houdini/hom/_index}$\rangle$ and can be accessed either through scripts run through the python terminal, or written directly into python nodes. Other than python, Houdini also has its own legacy scripting language, Hscript $\langle$\url{https://www.sidefx.com/docs/houdini15.5/commands/}$\rangle$, which can be used to manipulate the environment. As of version 12.5, Houdini's internal shading language, Vex $\langle$\url{https://www.sidefx.com/docs/houdini15.5/vex/_index}$\rangle$, was opened up to be used for geometry manipulation. This allows the user, through the use of wrangle nodes, to write custom geometry manipulators that utilise the multi-threaded implementation of vex for fast execution, without the need to manually re-compile the node as the user would have to do in c++.
+
+The techniques used in the implementation of the methods described in this research rely heavily on the use of sparse volumes to calculate intersections, unions, and to manipulate volumes. Houdini utilises the OpenVDB library developed by DreamWorks Animation\cite{openvdb} to implement sparse volumes
+
+Houdini seemed to be a natural choice as the host application for the tools developed in this research. Due to the wide range of methods for producing tools and creating user interfaces it made rapid prototyping and development very efficient. Another advantage of using Houdini is that once the tools have been built, a technical artist who is familiar with the software is able to go inside the nodes and edit them to perform to their specific requirements. However, there are always drawbacks and limitations to developing for a single application. These are discussed in depth in the conclusion.
+
+\section{Octree Faceting with Local Transformations}
+The aim of this technique is to facet a given polygon model and provide an interface to control the faceting and apply unique transformations to each of the facets. Given an initial polygonal object $M$, a subset $V$  of the points in $M$ are selected (where $V  = \{\bm{v_1}, \bm{v_2}, .., \bm{v_n}\}$ and $\bm{v_i} \in M$ for $\bm{v_i}$ in $V$) and passed to the octree generator. The generator takes these points and outputs a set of all the leaf nodes $N$ where $N = \{N_1, N_2, .., N_m\}$. By manipulating the maximum depth of the tree and the maximum points per node, parts of the mesh with high point density are subdivided more than other lower resolution parts. This results in a non-uniform grid that can then be used to transform the original geometry with a higher degree of feature sensitivity than a uniform grid as illustrated in \emph{fig.} \ref{fig:oct comparison}.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.396\linewidth]{oct01.png}\includegraphics[width=0.4\linewidth]{oct02.png}}
+\center{\includegraphics[width=0.4\linewidth]{oct03.png}\includegraphics[width=0.398\linewidth]{oct04.png}}
+\caption{\textbf{Top Left:} Geometry passed into Octree node. \textbf{Top Right:} Result of depth limit at 10 and max points at 30. \textbf{Bottom Left:} Result of depth limit at 10 and max points at 10. \textbf{Bottom Right:} Result of depth limit at 5 and max points at 10. Here it is shown that, by changing the parameters of the octree node, feature sensitivity can be achieved to a greater or lesser degree depending on what the artist intends to do.}
+\label{fig:oct comparison}
+\end{figure}
+\fi
+
+Data is attached to each leaf node that represents how it will manipulate the original mesh. The structure of each leaf node is $N_i = \{\bm{p_i}, w_i, T_i, s_i\}$ for $N_i$ in $N$. $\bm{p_i}$ represents the nodes position in the scene, which is its centre as a 3-dimensional coordinate. $w_i$ holds the nodes width (one side length of the cube that represents the node). $T_i$ contains the nodes set of transformations, which describe how the node will manipulate the original mesh. This is a user-defined set that can include scales, translations and rotations. Finally, $s_i$ is the nodes associated solid, this can be any 3d shape but \hl{in the examples shown} spheres, cubes and tetrahedrons are used.
+
+Once this data has been set, these nodes are iterated through. For each node $N_i$, its associated solid, $s_i$, is found and moved to the position of the leaf node $\bm{p_i}$. The boolean intersection is then found between the solid and the original mesh. This new shape is then transformed using $T_i$. These new shapes are then merged together to produce the final sculpture.
+
+The implementation and interface for the faceting system are split into two sections. Firstly, generating the octree from the input mesh and secondly using the octree to facet the mesh.
+
+\subsection{Octree Generation}
+The octree implementation was encapsulated in a single python node. This allowed for the use object oriented techniques not available in vex, without the need to re-compile and re-import c++. As algorithms for producing the octrees are well known and understood, the algorithm and its python implementation are not included here but can be found in appendix \ref{apendix:octree}.
+
+The node was given parameters to allow the artist to control the generation of the octree:
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.6\linewidth]{octui.png}\includegraphics[width=0.281\linewidth]{transui.png}}
+\caption{A screen-capture of the octree node's user interface along side the user interface for a standard Houdini transform node. The similarity in their layouts allows an artist who is familiar with the Houdini interface to easily use the octree node.}
+\label{fig:speciation}
+\end{figure}
+\fi
+
+This allowed the artist to control the size and position of the tree, how it is drawn in the viewport and the depth and point limit (illustrated in \emph{fig.} \ref{fig:oct comparison}). The octree outputs a set of points that represent the positions of each of the leaf nodes. Each point has an additional attribute \emph{pscale} that represents the width of the node. The interface for the octree node allows the artist to output boxes in the place of points, making visualisation more straightforward while the artist sets the desired parameters.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.8\linewidth]{oct05.png}}
+\caption{The output points of the octree nodes, with their bounding boxes shown in wireframe mode}
+\label{fig:speciation}
+\end{figure}
+\fi
+
+\subsection{Faceting and Transformations}
+Once the octree has been generated, the original mesh is faceted and transformed. To do this, the correct attributes must be set for the octree nodes. These are the associated solid and transformation values. This is implemented in several wrangle nodes that add the additional attributes \emph{rot}, \emph{id} and \emph{solid} to the points produced by the octree node. While the solid remains constant throughout a sequence, the transformation values can be driven by time to produce more interesting dynamic sculptures.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.8\linewidth]{ftwrangle.png}}
+\caption{Here, the contents of a wrangle node that sets the rotation values on the points generated by the octree node. \emph{@id} is a random seed attribute for each point. The artist can manipulate the Rotation Limit and Speed sliders to alter the period and amplitude of the rotations. They could even, if they wished, edit the code in the wrangle node directly to produce their own custom rotations.}
+\label{fig:speciation}
+\end{figure}
+\fi
+
+The faceting happens inside a foreach loop that iterates through each point. Firstly, the solid is copied to the point and converted into a vdb. Then the intersection of the solid vdb and a vdb of the original mesh is calculated, this is then converted back to polygons, transformed and combined with the output of the loop for each of the other points. This process is formalised as:
+
+\begin{lstlisting}[escapeinside={(*}{*)}]
+new_mesh = empty_mesh_object
+for each node in (*$N$*):
+	solid = node.solid
+	solid.moveTo(node.position)
+	new_shape = solid (*$\cap$*) original_mesh
+	for t in node.transforms:
+		new_shape.transform(t)
+	new_mesh = new_mesh (*$\cup$*) new_shape
+\end{lstlisting}
+
+This method relies heavily on converting each piece to and from a vdb because the use of vdbs produces much cleaner results than booleans between polygonal meshes. However, to produce high quality results, the volume resolution must be high and the conversion times are slow.
+
+
+\section{Space-Time Blending}
+\subsection{Overview}
+Space-time blending is method for morphing between Frep solids. To perform the blend over time, two Frep solids, defined in $n$-dimensions are converted into $(n+1)$-dimensional space-time. The two solids are then converted into half cylinders in space-time and a bounded blend is performed across time. A full description of the process is given by Pasko et al in \cite{space-time blending 1}. The process is more easily visualised with $2$-dimensional Frep solids and, as no assumptions are made about their dimensionality, the process does not change for $3$-dimensional solids. Firstly, two $2$-dimensional shapes are defined on the $xy$ plane, shown in \emph{fig.} \ref{fig:e_start}. They are then converted to 3-dimensional space-time cylinders shown in \emph{fig.} \ref{fig:e_cyl}. Each cylinder is converted into a half cylinder by performing a subtraction operation in space-time. The result is shown in \emph{fig.} \ref{fig:e_half}. A bounded blend is then performed between the two half cylinders which can be seen in \emph{fig.} \ref{fig:e_blend}.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.4\linewidth]{e_start.png}}
+\caption{Initial shapes for the space-time blend of 2-dimensional solids.}
+\label{fig:e_start}
+\end{figure}
+\fi
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.4\linewidth]{e_cyl.png}}
+\caption{Space-time cylinders produced from initial solids.}
+\label{fig:e_cyl}
+\end{figure}
+\fi
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.4\linewidth]{e_half.png}}
+\caption{Space-time half cylinders produced by subtracting half spaces from the cylinders.}
+\label{fig:e_half}
+\end{figure}
+\fi
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.4\linewidth]{e_blend.png}}
+\caption{Half-cylinders combined using a bounded blend with added material.}
+\label{fig:e_blend}
+\end{figure}
+\fi
+
+To produce a 2d animated sequence showing the blend, slices are take along the $time$ axis to produce images. A sequence is illustrated in \emph{fig.} \ref{fig:e_anim}
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.25\linewidth]{e_seq_01.png}\includegraphics[width=0.25\linewidth]{e_seq_03.png}\includegraphics[width=0.25\linewidth]{e_seq_3_2.png}}\center{\includegraphics[width=0.25\linewidth]{e_seq_3_3.png}\includegraphics[width=0.25\linewidth]{e_seq_04.png}\includegraphics[width=0.25\linewidth]{e_seq_06.png}}
+\caption{A sequence of slices through the 3-dimensional space-time blend illustrating an animated blend sequence between 2-dimensional solids.}
+\label{fig:e_anim}
+\end{figure}
+\fi
+
+When applied in 3-dimensions, the sequence in \emph{fig.} \ref{fig:e_seq2} shows a smooth blend between 3d objects.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.25\linewidth]{tcb01.png}\includegraphics[width=0.25\linewidth]{tcb02.png}\includegraphics[width=0.25\linewidth]{tcb03.png}}\center{\includegraphics[width=0.25\linewidth]{tcb04.png}\includegraphics[width=0.25\linewidth]{tcb05.png}\includegraphics[width=0.25\linewidth]{tcb06.png}}
+\caption{A sequence of slices through a 4-dimensional space-time blend illustrating an animated blend sequence between 3-dimensional solids.}
+\label{fig:e_seq2}
+\end{figure}
+\fi
+
+\subsection{Aim and Interface}
+The aim of using space time blending was to produce motion trails to follow the facets produced by the octree method described earlier. This was to produce effect similar to those seen in the Italian futurist sculptures of Umberto Bocciono, an artist heavily influenced by cubism. 
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.5\linewidth]{unique.jpeg}}
+\caption{Unique Forms of Continuity in Space (1913) by Umberto Boccioni.}
+\label{fig:speciation}
+\end{figure}
+\fi
+
+To achieve this, instead of blending between two separate objects, the blend is performed between frames $f$ and $f - n$. By careful tweaking of the blend parameters, a satisfactory motion trail can be produced that follows an animated object with a seamless transition between the object and its trail. This allows for the effects of the surrounding frames of an animation to influence the current frame being viewed, producing an interesting projection of 4-dimensional space-time onto 3-dimensional space.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.25\linewidth]{cube_01.png}\includegraphics[width=0.25\linewidth]{cube_02.png}\includegraphics[width=0.25\linewidth]{cube_03.png}}\center{\includegraphics[width=0.25\linewidth]{cube_04.png}\includegraphics[width=0.25\linewidth]{cube_05.png}\includegraphics[width=0.25\linewidth]{cube_06.png}}
+\caption{An animated rotating cube blending between frame $f$ and frame $f - 5$ to produce an interesting motion trail.}
+\label{fig:speciation}
+\end{figure}
+\fi
+
+After several tests, the space-time blend was implemented as a single node that takes in two polygonal meshes and allows the user to blend between them. The process involves 3 bounded blends in space-time, two of them to produce smoothed half cylinders using blended subtraction described in \cite{frep modeling} and the third blends between these two half cylinders. Blended subtraction is used to generate the half cylinders as this results in a much smoother final blend. The user interface, shown in \emph{fig.} \ref{fig:stbui} allows the artist to control the positions and blend parameters for each of the 3 blends individually and the global resolution of the volumes used to perform the blend. 
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.8\linewidth]{stblend.png}}
+\caption{Image of the user interface for the space time blend node. The volume controls allow the user to specify attributes for the volume such as resolution. The sections titled f1 controls, f2 controls and blend controls allow the artist to individually set parameters for each of the 3 blends involved. Notice the output box at the bottom. Here the artist is able to choose between visualising the first solid's half-cylinder, the second solid's half-cylinder or the output of the blend. This was found to be a useful parameter for debugging as the node was being written and allows the artist to visualise each section individually as they fine-tune the parameters to their design.}
+\label{fig:stbui}
+\end{figure}
+\fi
+
+The blend point is the position in time that the blend is centred around. The blend radius controls the distance in the time dimension that the blend is performed within and the parameters a0-3 control various weights within the blend.
+	
+\section{Rendering from a Cubist Camera}
+%\ifpicture
+%\begin{figure}[h!]
+%\center{\includegraphics[width=0.8\linewidth]{vi.png}}
+%\end{figure}
+%\fi
+The rendering system was built with techniques presented by Arpa et al \cite{arpa} and involves a 2 pass rendering system from a spherical camera. A full explanation of this method can be found in \cite{arpa} and therefor, only a brief summary shall be given here. Firstly, the scene is rendered from a cubist camera to produce a main image and a saliency image. These two images are used to generate a fracturing pattern that is then applied to the camera to produce spatial imprecision and perspective correction. The fractured camera is then used for a second pass of rendering to produce the final cubist paintings which then go through a process of applying artistic effects.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.35\linewidth]{r_geo.png}\includegraphics[width=0.351\linewidth]{r_salflat.png}}
+\center{\includegraphics[width=0.35\linewidth]{r_frac.png}\includegraphics[width=0.3935\linewidth]{r_art.png}}
+\caption{\textbf{Top Left:} Initial geometry to be rendered. \textbf{Top Right:} First pass render of the geometry saliency. \textbf{Bottom Left:} Voronoi fracturing pattern produced from the saliency image. \textbf{Bottom Right:} Final rendered image composited with artistic effects.}
+\label{fig:speciation}
+\end{figure}
+\fi
+
+Following the framework set out by Arpa et al, the cubist renderer was implemented in Houdini in two sections. Firstly, a spherical cubist camera and secondly, a renderer that uses the cubist camera to render a scene.
+
+\subsection{Cubist Camera}
+The camera is initially a NURBS sphere which the artist selects a patch of to use as the film surface. The NURBS patch is then converted to polygons and subdivided to the resolution of the final image. This is done as each point of the mesh will represent a pixel in the final image that will be projected along its normal in the same way that rays are cast from a point in ray-tracing. Once the camera has been built, the relevant parameters are set on the geometry: resolution, focal distance etc. to be used by nodes in the rendering system. The relevant parameters from this process are then promoted up to the user interface at object level.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=1\linewidth]{sphereui.png}}
+\caption{Image of the user interface for the spherical cubist camera node.}
+\label{fig:spui}
+\end{figure}
+\fi
+
+The translate and rotate parameters allow the user to position the camera in the scene. The focal distance represents the radius of the original sphere. The camera subdivisions represents how many times the patch will be subdivided and relates directly to the resolution of the final image. The vertical and horizontal limits allow the user to control how much of the sphere is culled to produce the rendering surface.
+
+\subsection{Rendering and Artistic Effects}
+The renderer is implemented in a geometry network with points on the camera surface representing pixels in the final render. To give the renderer the same style of user interface that an artist would be familiar with when using Houdini's own renderer, Mantra, the render engine, built in a geometry network, is placed inside a render node. A traditional mantra renderer is also placed inside the network to renderer an image of the flat geometry surface. This allows the information in the geometry to be converted to an image file to be used with traditional compositing applications
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=1\linewidth]{renderui.png}}
+\center{\includegraphics[width=1\linewidth]{mantraui.png}}
+\caption{A comparison between the interface for the cubist render node and a traditional Mantra render node.}
+\label{fig:comparison}
+\end{figure}
+\fi
+
+ A custom shader is applied to the flat surface to produce render layers that can be combined in any compositing software to produce effects designed by the artist. These layers are shown in \emph{fig.} \ref{fig:render layers}.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.35\linewidth]{rl_colour.png}\includegraphics[width=0.35\linewidth]{rl_edge.png}}
+\center{\includegraphics[width=0.35\linewidth]{rl_normal.png}\includegraphics[width=0.35\linewidth]{rl_id.png}}
+\caption{Output layers contained in the images produced by the cubist render node. \textbf{Top Left:} Colour layer. \textbf{Top Right:} Fracture edges. \textbf{Bottom Left:} Normals. \textbf{Bottom Right:} Fracture id.}
+\label{fig:render layers}
+\end{figure}
+\fi
+
+The interface for the renderer containing the geometry network, custom shaders and camera required to produce the final renders is split into two sections. Firstly the \emph{Image} tab where the artist will see familiar parameters to a Mantra rendering node to specify frames to render, and the output location and secondly, the \emph{render} tab where the artist sets parameters specific to the cubist rendering.
+
+\ifpicture
+\begin{figure}[h!]
+\center{\includegraphics[width=0.8\linewidth]{renderui2.png}}
+\caption{The parameters specific to the cubist render node.}
+\label{fig:comparison}
+\end{figure}
+\fi
+
+The user is currently able to specify the objects to be rendered, camera, number of fractures and rotation clamp. The rotation clamp defines the maximum re-orientation that will be done per facet to align the geometric centre to the saliency centre. Currently the fracturing type is limited to voronoi fracturing and the number of fracture layers is limited to one.
+	
+\section{Results}
+	\subsection{Octree Faceting}
+	pictures and discussion on results of octree faceting
+	
+	\subsection{Space-Time Blending}
+	pictures and discussion on results of space-time blending
+	
+	\subsection{Rendering}
+	pictures and discussion on results of rendering
+	
+	\subsection{Combining Methods}
+	pictures and discussion on what happens when I start to combine techniques
+
+\section{Potential Extensions}
+The techniques in this paper show a lot of potential for producing artworks inspired by cubist techniques. However, more development is required to give the artist more complete control over the process. Much of this research and development has already been done but still requires implmentation and integration with the work presented here. 
+
+\subsection{Extensions to the Octree Faceting and Space-Time Blending Systems}
+Parameters on the space-time blend node require much experimentation to get right for any particular blend. When this technique is combined with the faceting, many different blends  are being made with the same parameters. This meant that while the blends worked for certain parts, the parameters did not work for others. To fix this, a system of categorising the blends is proposed, where the blends are subdivided into categories depending on the distance between the pieces to be blended and their size, then the artist would be able to have more granular control over the process, but not need to set each blend individually. The system could allow the artist to set the number of subdivisions and therefor how many blend parameters they would have to set to get the required result for their particular project. A number of additional controls are proposed by Pasko et al\cite{space-time blending 2} that would allow the artist even more control over the blending process if they were to be implemented and integrated with the system already in place. There is also the potential for adding complex material attributes to the blends as proposed by Pasko et al in \cite{materials}.
+
+\subsection{Extensions to the Rendering System}
+There is also room for development in the rendering system. Currently, there is no continuity between the fracture points scattered in different frames, resulting in animations that show flickering fractures. This could be fixed by implementing a system of point interpolation where points are scatters every $n$ frames and between these, the points are interpolated, resulting in smooth facet movements over time. Arpa et al also develop alternate faceting techniques\cite{arpa} and artistic effects that, due to the time constraints of this project, could not be implemented but would give the artist further control over the final aesthetic of the rendering process.
+
+\section{Conclusion}
+Several techniques for reducing dimensions of a scene while maintaining aspects of the original have been presented and their implementation outlined in the dcc application Houdini. While they all work as individual tools, there is much room for developing their implementation and their integration with each other. The novel technique of faceting and transforming geometry allows parts of the model to be seen from alternate perspectives and produces interesting, abstracted sculptures that contain elements of the original mesh. The innovative use of space-time blending to blend between frames of an animated sequence allows for the creation of dynamic sculptures where each frame contains information from the neighbouring frames. The rendering system implements the cubist rendering technique and outputs images that can be combined in traditional compositing software for an artist to manipulate. All three systems have the potential for further development, both in their underlying algorithm and their implementation.
+
+As when limiting the implementation of any algorithm or process to a particular piece of software, there were advantages and drawbacks from using Houdini as the host application. The inherently modular node structure of Houdini allowed for the development of tools that were easily fitted into a pre-existing pipeline. It also meant that a lot of the components for the various systems weare already developed and only required integration. A good example of this would be the measure node that allowed for the fast calculation of curvature for a polygonal mesh and the implementation of OpenVDB for converting polygonal meshes to signed distance fields without having to implement the complex algorithms from scratch. The drawbacks of using Houdini were that the algorithms had to be manipulated to fit a framework that was already set in place. For instance, the rendering system was implemented at geometry level as this seemed to be the most natural place to write it. It then had to be hidden inside rendering operators to produce the same interface interface that Houdini's native renderer, Mantra, uses. This could have been circumvented by writing the renderer using the Houdini sdk however, due to the time constraints for this project and the complex nature of the sdk this was not possible.
+
+\begin{thebibliography}{2}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{flatland}
+Abbot, E., 1884. Flatland: A Romance of Many Dimensions. United Kingdom, Seeley \& Co.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{futurist manifesto}
+Boccioni, A., 1912. Technical Manifesto of Futurist Sculpture. [online] Available from: \url{http://www.unknown.nu/futurism/techsculpt.html}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{mulit project}
+Agrawala, M., Zorin, D. and Munzner, T., 2000. Artistic Multiprojection Rendering. \emph{Springer Vienna} [online] Available from: \url{http://link.springer.com/chapter/10.1007/978-3-7091-6303-0_12}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{fresh perspective}
+Singh, K., 2002. A Fresh Perspective. \emph{Graphics Interface} [online] Available from: \url{http://www.dgp.toronto.edu/~karan/pdf/perspective.pdf}
+%cohesive, interactive approach for exploring non-linear perspective projections.
+%compositing different projections from different cameras with different weights
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{painterly rendering}
+Collomosse, J. and Hall, P., 2002. Painterly Rendering Using Image Salience. \emph{Eurographics} [online]. Available from: \url{http://ieeexplore.ieee.org/document/1011281/}
+%manipulating 2d images based on salience to produce painterly effects
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{augmented sculpture}
+Adzhiev, V., Cominos, P., and Pasko, A., 2003. Augmented Sculpture: Computer Ghosts of Physical Artefacts. \emph{Leonardo} [online]. Available from: \url{http://www.mitpressjournals.org/doi/abs/10.1162/002409403321921433#.WH0nTJK3h74}
+%build computer model from real sculpture
+%edit with hyperfun tools
+%product is ready for 3d printing, "closing the loop"
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{painterly cubist rendering}
+Collomosse, J. and Hall, P., 2004. Cubist Style Rendering from Photographs. \emph{IEEE Transactions on Visualisation and Computer Graphics} [online]. Available from: \url{http://ieeexplore.ieee.org/document/1260739/}
+%buildig in sailency techniques mentioned before to produce cubist style rendering
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{glassner1}
+Glassner, A., 2004. Digital Cubism. \emph{IEEE Computer Graphics and Applications} [online]. Available from: \url{http://ieeexplore.ieee.org/document/1297016/}
+%"putty cameras" where the film is a curved surface
+%render from several cameras, roto out desired sections, re-render with special lens shader to combine the cameras into one image
+%in non-selected regions, rays are interpolated between the different camera models
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{glassner2}
+Glassner, A., 2004. Digital Cubism, Part 2. \emph{IEEE Computer Graphics and Applictaions} [online]. Available from: \url{http://ieeexplore.ieee.org/document/1310215/}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{hyperfun framework}
+Adzhiev, V. and Pasko, P., 2004. Function-based shape modelling: mathematical framework and specialised language. \emph{Automated Deduction in Geometry} [online]. Available from: \url{http://link.springer.com/chapter/10.1007/978-3-540-24616-9_9}
+%big chunky paper that details function based modelling and hyperfun stuff
+%talks about converting from polygon model to frep solid
+%talks about r-functions and set theoretic operations for frep solid
+%talks about bounded blending operations
+%details on hyperfun implementation
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{space-time blending 1}
+Pasko, G., Pasko, A., and Kunii, T., 2004. Space-time Blending. \emph{Computer Animation and Virtual Worlds} [online]. Available from: \url{http://onlinelibrary.wiley.com/doi/10.1002/cav.12/abstract}
+%first paper introducing the idea of space-time blending of frep solids
+%lots of detailed explanation of process and implementation
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{trimming surfaces}
+Pasko, G., Pasko, A., 2004. Trimming Implicit Surfaces. \emph{The Visual Computer} [online]. Available from: \url{http://link.springer.com/article/10.1007/s00371-004-0250-6}
+%about trimming implicit surfaces and polygonizing the results
+%not that necessary for this project but could be possible extension to produce nice topology 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{frep modeling}
+Pasko, G., 2005. Shape Modelling with Some Applications to the Cultural Preservation. Thesis (PhD). IT Institute of Kanazawa Institute of Technology. 
+%big collection of stuff about frep and blending 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{shadows}
+Robbin, T., 2006. Shadows of Reality, the Fourth Dimension in Relativity, Cubism and Modern Thought. \emph{Yale University Press}, New Haven and London.
+%odd book, a little dry
+%has chapters about projective geometry, i dont really understand it
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{arty shapes}
+Song, Y.,-Z., Rosin, P., Hall, P., Collomosse, J., 2008. Arty Shapes. \emph{Computational Aesthetics in Graphics, Visualization, and Imaging} [online]. Available from: \url{http://info.ee.surrey.ac.uk/CVSSP/Publications/papers/Collomosse-CAe-2008.pdf}
+%2d shape fitting with image analasys to make nice shapes fit parts of image
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{hybrid}
+Karavtsov, D., Fryazinov, O., Adzhiev, A., Pasko, A. and Comninos, P., 2010. Embedded Implicit Stand-ins for Animated Meshes. \emph{Computer Graphics Forum} [online]. Available from: \url{http://hyperfun.org/wiki/doku.php?id=frep:standins}
+%talks about producing effects using dual representations of meshes
+%not overly useful for this but was maybe insparation for the dual representation octree system
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{space-time blending 2}
+Pasko, G., Kravtsov, D.,  and Pasko, A., 2010. Real-Time Space-Time Blending with Improved User Control. \emph{Motion in Games} [online]. Available from: \url{http://link.springer.com/chapter/10.1007/978-3-642-16958-8_15}
+%details space time blending with extra user controls
+%not used in this but mentioned as part of possible extensions
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{reproducing escher}
+Pasko, G., Pasko, P., Vilbrandt, T., Filho, A., and da Silva, J., 2011. Ascending in Space Dimensions: Digital Crafting of M.C. Escher's Graphic Art. \emph{Leonardo} [online]. Available from: \url{http://www.mitpressjournals.org/doi/abs/10.1162/LEON_a_00241#.WH0oQpK3h74}
+%paper about using frep to create escher like artefacts
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{wang}
+Wang, W.-S., Chao, M.-W., Yi, C.-C., and Lin, C.-H., 2011. Cubist Style Rendering for 3D Polygonal Models. \emph{Journal of Information Science and Engineering} [online] Available from \url{https://pdfs.semanticscholar.org/8e96/a4d3b9c5465ebce1067ecfc27ce10c8fb459.pdf}
+%cubist style rendering that involves curvature enhancement
+%views are selected and model is duplicated and aligned for final render with artist effects
+%greedy view finding process
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{arpa}
+Arpa, S., Bubul, A., Capin, T. and Ozguc, B., 2012. Perceptual 3D rendering based on principles of analytical cubism. \emph{Computers and Graphics} [online]. Available from: \url{https://www.researchgate.net/publication/256938022_Perceptual_3D_rendering_based_on_principles_of_analytical_cubism}
+%proposing the spherical and cylindrical camera models
+%details on how to implement
+%and artisitc effects
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{materials}
+Sanchez, M., Fryazinov, O., Adzhiev, A., Comminos, P. and Pasko, A., 2015. Space-Time Transfinite Interpolation of Volumetric Material Properties. \emph{IEEE Transactions on Visualisation and Computer Graphics} [online]. Available from: \url{http://ieeexplore.ieee.org/document/6894217/?arnumber=6894217}
+%adding materials to space time blended solids
+%not for this project but should be mentioned in extensions
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{tate}
+Tate, 2016. Analytical Cubism. \emph{Tate}[online]. Available from: \url{http://www.tate.org.uk/learn/online-resources/glossary/a/analytical-cubism}
+%just for some information on cubism
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem{openvdb}
+OpenVDB, 2016. About. \emph{DreamWorks Animation}[online]. Available from: \url{http://www.openvdb.org/about/}
+%just for some information on cubism
+
+\bibitem{sidefx}
+SideFX, 2016. Home. \emph{Side Effects Software ltd.}[online]. Available from: \url{http://www.sidefx.com}
+
+\end{thebibliography}
+
+\begin{appendices}
+\section{Octree Generation Algorithm}
+\label{apendix:octree}
+\subsection{Pseudo Code}
+The following is a description of the algorithm used to generate the octree:
+
+\begin{lstlisting}[escapeinside={(*}{*)}]
+for (*$\bm{v_i}$*) in (*$\bm{V}$*):
+	addPointToTree((*$\bm{v_i}$*))
+
+ Function addPointToTree((*$\bm{v_i}$*)):
+	root_node.addPointToNode((*$\bm{v_i}$*))
+	
+Function addPointToNode((*$\bm{v_i}$*)):
+	add (*$\bm{v_i}$*) to node.data
+	if node is full and node.depth < depth_limit:
+		subdivideNode()
+
+Function subdivideNode():
+	for (*$\bm{v_i}$*) in node.data:
+		index = findCorrectChild((*$\bm{v_i}$*))
+		if node.children[index] does not exist:
+			node.children[index] = new node
+		node.children[index].addPointToNode((*$\bm{v_i}$*))
+	
+Function findCorrectChild((*$\bm{v_i}$*)):
+	index = 0
+	if (*$\bm{v_i}.x$*)	> node.pos.x:
+		result += 4
+	if (*$\bm{v_i}.y$*)	> node.pos.y:
+		result += 2
+	if (*$\bm{v_i}.z$*)	> node.pos.z:
+		result += 1
+	return result
+\end{lstlisting}
+
+\subsection{Python Implementation}
+The following is the python code used in a python node to generate the octree:
+\begin{lstlisting}[language = Python]
+import random as rand
+
+#the houdini node
+node = hou.pwd()
+#a list of the inputs to the python node
+inputs = node.inputs()
+#the first inputs geometry, left empty so that the output is clean
+geo0 = node.geometry()
+#the 2nd inputs geometry, where the source geometry comes in
+geo1 = inputs[1].geometry()
+#center of the root node
+origin = (
+          hou.evalParm("root_originx"), 
+          hou.evalParm("root_originy"), 
+          hou.evalParm("root_originz")
+         )
+#side length of the root cube
+root_size = hou.evalParm("root_size")
+#flag to tell it to draw boxes instead of points
+draw_boxes = bool(hou.evalParm("draw_mode"))
+#subdivison depth limit
+depth_limit = hou.evalParm("depth_lim")
+#maximum number of points to be put in each node
+max_data = hou.evalParm("max_pts")
+
+
+class Node:
+  """
+    forms the basis of the octree structure, it holds 8 child nodes and all the
+    necessary methods for recursively adding data and rendering houdini geometry 
+    from the constructed tree
+  """
+  def __init__(self, _pos, _size, _depth):
+    """
+      initializes the node
+
+      self    current Node instance
+      _pos    position of the node
+      _size   width of the node cube
+      _depth  depth of the node in the tree
+    """
+    #center point of the node
+    self.pos = _pos
+    #width of the node cube
+    self.size = _size
+    #flag that indicates if the node contains data or if data is stored in children
+    #data is only stored in leaf nodes
+    self.isleaf = True
+    #depth is the branch depth of the leaf, the root node is at depth 0
+    self.depth = _depth
+    #a list of all points stored in the node if it is a leaf
+    self.points = []
+    #a list of all child nodes
+    self.branches = [None, None, None, None, None, None, None, None]
+  
+  def insertPoint(self, _point):
+    """
+      the function that is called whenever new data is to be added to a node
+
+      self    current Node instance
+      _point  is the data to be added to the node
+    """
+    #if we are on a leaf node
+    if self.isleaf:
+      #if we have reached the division limit
+      if self.depth == depth_limit:
+        #just stick the new data in the node
+        self.points.append(_point)
+      #or the node is not full
+      elif len(self.points) < max_data:
+        self.points.append(_point)
+      #otheriswe we need to divide the leaf into 8 and stick new data in them
+      else:
+        self.points.append(_point)
+        self.subdivide()
+    #if we are not on a leaf
+    else:
+      child_data = self.findChildIndex(_point)
+      index = child_data[0]
+      multipliers = child_data[1]
+      if self.branches[index] == None:
+        #create child
+        new_pos = (
+                    self.pos[0] + (self.size/4 * multipliers[0]),
+                    self.pos[1] + (self.size/4 * multipliers[1]),
+                    self.pos[2] + (self.size/4 * multipliers[2])
+                  )
+        new_size = self.size/2
+        new_depth = self.depth + 1
+        self.branches[index] = Node(new_pos, new_size, new_depth)
+      #insert point into child node
+      self.branches[index].insertPoint(_point)
+      
+  def findChildIndex(self, _point):
+    """
+      looks at the points position and finds what child node it should be placed in.
+      uses a binary system to set the putput value, where x is the most significant
+      bit and z is the least significant. If each of x, y and z are greather than their
+      respective center position component of the node, the bit is set to 1, otherwise
+      it is left at 0.
+
+        3------7
+       /|     /|
+      2-|----6 |    y
+      | 1----|-5    | z
+      |/     |/     |/
+      0------4      o-----x
+      The output (left) relative to the base vectors (right)
+  
+      self    current Node instance
+      _point  the point to be checked against destinations
+      return  a tuple, where the first value is the index, and the second is an array of multipliers
+    """
+    result = 0
+    multipliers = [-1, -1, -1]
+    #z component
+    if _point[2] > self.pos[2]:
+      #setting least significan bit
+      result += 1
+      multipliers[2] = 1
+    #y component
+    if _point[1] > self.pos[1]:
+      #setting middle bit
+      result += 2
+      multipliers[1] = 1
+    #x component
+    if _point[0] > self.pos[0]:
+    #setting most significant bit
+      result += 4 
+      multipliers[0] = 1
+    return (result, multipliers)
+        
+  def subdivide(self):
+    """
+      the subdivide function is called whenever a node becomes too full, it divides 
+      the node into 8 and distributes the data among these new nodes
+
+      self    current Node instance
+    """ 
+    self.isleaf = False
+    #run through each point in points
+    for p in self.points:
+      #find correct child
+      child_data = self.findChildIndex(p)
+      index = child_data[0]
+      multipliers = child_data[1]
+      #if child doesnt exist
+      if self.branches[index] == None:
+        #create child
+        new_pos = (
+                    self.pos[0] + (self.size/4 * multipliers[0]),
+                    self.pos[1] + (self.size/4 * multipliers[1]),
+                    self.pos[2] + (self.size/4 * multipliers[2])
+                  )
+        new_size = self.size/2
+        new_depth = self.depth + 1
+        self.branches[index] = Node(new_pos, new_size, new_depth)
+      #insert point into child node
+      self.branches[index].insertPoint(p)
+
+  def printNode(self):
+    
+    """
+      recursively runs through nodes and prints their data if they are a leaf
+
+      self    current Node instance
+    """
+    if self.isleaf == True:
+      print "NODE:"
+      print "pos: ", self.pos
+      print "size: ", self.size
+      print "depth: ", self.depth
+      print "points: ", self.points
+    else:
+      for node in self.branches:
+        if node != None:
+          node.printNode()
+  
+  def draw(self, _draw_boxes):
+    """
+      creates houdini geometry for each cube that contains data. It recursively calls
+      its self for each child node if the current node is not a leaf
+
+      self    current Node instance
+    """
+    if self.isleaf:
+      if _draw_boxes:
+        #set up points, the 8 verticies of a cube
+        pts = [
+                (self.pos[0] - self.size/2, self.pos[1] - self.size/2, self.pos[2] - self.size/2),
+                (self.pos[0] - self.size/2, self.pos[1] - self.size/2, self.pos[2] + self.size/2),
+                (self.pos[0] - self.size/2, self.pos[1] + self.size/2, self.pos[2] - self.size/2),
+                (self.pos[0] - self.size/2, self.pos[1] + self.size/2, self.pos[2] + self.size/2),
+                (self.pos[0] + self.size/2, self.pos[1] - self.size/2, self.pos[2] - self.size/2),
+                (self.pos[0] + self.size/2, self.pos[1] - self.size/2, self.pos[2] + self.size/2),
+                (self.pos[0] + self.size/2, self.pos[1] + self.size/2, self.pos[2] - self.size/2),
+                (self.pos[0] + self.size/2, self.pos[1] + self.size/2, self.pos[2] + self.size/2)
+              ]
+        #add the constucted points to the houdini geometry
+        h_pts = []
+        for p in pts:
+          point = geo0.createPoint()
+          point.setPosition(p)
+          h_pts.append(point)
+
+        #create 12 polys from the points
+        self.createPoly((0, 1, 3, 2), h_pts)
+        self.createPoly((6, 7, 5, 4), h_pts)
+        self.createPoly((2, 6, 4, 0), h_pts)
+        self.createPoly((1, 5, 7, 3), h_pts)
+        self.createPoly((0, 4, 5, 1), h_pts)
+        self.createPoly((3, 7, 6, 2), h_pts)
+      else:
+        pscale_attrib = None
+        try:
+          pscale_attrib = geo0.addAttrib(hou.attribType.Point, "pscale", 0.0)
+        except:
+          #probably means the attribute has already been created
+          pscale_attrib = geo0.findPointAttrib("pscale")   
+        point = geo0.createPoint()
+        point.setPosition(self.pos)
+        point.setAttribValue(pscale_attrib, self.size)
+        point.setAttribValue
+    #if it is not a leaf node
+    else:
+      #call the draw function for each of the children
+      for node in self.branches:
+        if node != None:
+          node.draw(_draw_boxes)
+  
+  def createPoly(self, _indicies, _pts):
+    """
+      a small function that creates polygons from points in the geometry
+
+      self      current Node instance
+      _indicies a list of indicies that represent the polygon
+      _pts      a list of coordinates that represent the verticies that the indicies refer too 
+    """
+    face = geo0.createPolygon()
+    for i in _indicies:
+      face.addVertex(_pts[i])
+    
+
+class OctTree:
+  """ 
+    a container class to hold the root node, which in turn holds all of the nodes in the tree.
+    maybe not necessary but it seemed neater and more obvious to have a wrapper around the node
+    structure
+  """
+  def __init__(self, _origin, _worldsize):
+    
+    self.root = Node(_origin, _worldsize, 0)
+    self.worldsize = _worldsize
+
+  def printTree(self):
+    self.root.printNode()
+  
+  def insertPoint(self, _point):
+    self.root.insertPoint(_point)
+  
+  def draw(self, _draw_boxes):    
+    self.root.draw(_draw_boxes)
+
+#init tree
+tree = OctTree(origin, root_size)
+#add data to the tree
+for point in geo1.points():
+  pos = point.position()
+  tree.insertPoint(pos)
+#renders the tree as houdini geometry
+tree.draw(draw_boxes)
+\end{lstlisting}
+
+\end{appendices}
+\end{document}
+
+
+
+
+
