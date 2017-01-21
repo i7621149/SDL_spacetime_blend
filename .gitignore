@@ -1,11 +1,2 @@
-SDL_spacetime
-texblend
-out/*
 Makefile
 obj/*
-report.pdf
-report.log
-report.aux
-video/*
-*.mov
-*.mp4
