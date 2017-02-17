@@ -16,7 +16,8 @@ enum class DrawMode
 	WHITE,
 	BLOCK_COLOR,
 	SIMPLE_BLEND,
-	SIMPLE_CLOSEST
+	SIMPLE_CLOSEST,
+	SDF
 };
 
 enum class ColorMode

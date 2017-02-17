@@ -1,0 +1,25 @@
+An implicit shape can be represented by a function in 2d or 3d space, in which on the surface, the function F is = 0, inside the surface F is less than 0 and outside F is more than zero. This approach of using signed distance fields has multiple applications including allowing for blending between shapes with radically different topology, by raising the input shapes to a higher dimension and blending between them along this dimension, then using cross sections over time to display the blend. More information can be found in Space time blending by pasko et al.
+
+Heterogeneous objects which include both the shape and attributes of the object, such as colour, can also be represented using signed-distance fields. This allows the internal structure of objects to be modeled using implicit functions, which has further uses, such as defining colour or other attributes for the object.
+
+This adds complexity to the space-time blending operations which is addressed in space time transfinite interpolation of volumetric material properties, in which the authors propose interpolation of section attributes such as colour, as well as using blends with established correspondence between partitions and blends with no established correspondence.
+
+The authors also suggest a method for a summation of a voxel field, or a pixel array in 2D, for a weighted average of colours at the inbetween stage of the blend where colour is not explicitly defined.
+
+I implemented this work in 2D as well as expanding on it in new ways to create an innovative program that achieves particular methods that have not been done before.
+
+I began by implementing a similar basic functionality to the program hyperfun, so that two boolean shapes can be blended between.
+
+I then incorporated the interpolation of colour, which allows for blending in RGB or HSV colourspace.
+
+Then I added the ability to blend between objects that are partitioned, as once this was implemented I could use textures as a series of partitions that are defined inside the input shapes.
+
+I added ability to texture the objects and the results where successful. This is the first implementation of the algorithm and I was happy to see the results.
+
+I also added my own method, in which the closest point is used. While it appears less intuitive, I believe that in 3D in particular this would have some applications, since it might produce more intuitive results for the surface of the object rather than the interior, especially looking at the surface of the balls.
+
+Finally I implemented the 8SSRDT algorithm, laymarie and lavine, which allows for creation of signed distance fields from images, which i believe to be a much more artist friendly input method. I believe is the first time it has been combined with the work of space-time blending and it makes the program far more intuitive and more user friendly.
+
+I added some functionality to the program to allow for previewing images, as the computation time can get quite long. I also reduced the time for colour computation by caching the results each frame so that repeated calculations are reduced. I also found that using lower resolution textures for blending could produce pleasing results much faster without much loss in quality
+
+Overall, the project is a success. It could be taken further by further optimising the process, experimenting with using a quad tree or similar structure for averaging colours, or by taking it into 3D. I believe that this is also an artist friendly way of introducing someone to the idea of signed distance fields and space time blending, since due to the non-trivial maths and ideas involved, it can put people off quite easily without tools such as mine which allow for more intuitive input.

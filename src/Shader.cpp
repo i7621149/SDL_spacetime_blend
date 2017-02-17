@@ -211,11 +211,14 @@ ngl::Vec3 Shader::shade(ngl::Vec2 uv, float t)
     s.m_b = 0.0;
   }
   */
-
-  if(bb2diskcross >= 0)
+  if(m_draw_mode == DrawMode::SDF)
+  {
+    s = finalColor(uv, f1, f2);
+  }
+  else if(bb2diskcross >= 0)
   {
     // color distribution in 4D space-time using partition of unity
-    if(f1 < 0.0 && f2 < 0.0)
+    if((f1 < 0.0 && f2 < 0.0))
     {
       s = finalColor(uv, f1, f2);
     }
@@ -398,6 +401,11 @@ ngl::Vec3 Shader::finalColor(ngl::Vec2 uv, float f1, float f2)
   ngl::Vec3 c1 = col1(uv);
   ngl::Vec3 c2 = col2(uv);
   ngl::Vec3 zero(0,0,0);
+  if(m_draw_mode == DrawMode::SDF)
+  {
+    c1 = 1 - ((m_DF->lookUp1(uv)) + 0.5);
+    c2 = 1 - ((m_DF->lookUp2(uv)) + 0.5);
+  }
 
   if(c1 == zero || c2 == zero)
   {

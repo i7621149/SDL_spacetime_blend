@@ -58,7 +58,7 @@ Even once the metamorphosis of shape is calculated, there is very little researc
 
 \section{Background and Alternative Approaches to Metamorphosis}
 \subsection{Image Prediction}
-Motion estimation can be relatively easily achieved using polynomial expansion \cite{polynomial expansion}. The OpenCV library provides some open source functions that allow motion flow to be calculated and used for naive image prediction, such as the next frame or in between frames \textit{Fig \ref{fig:webcam}}.\\
+Motion estimation can be relatively easily achieved using polynomial expansion \cite{polynomial expansion}. The OpenCV library provides some open source functions that allow motion flow to be calculated and used for naive image prediction, such as the next frame or in between frames \textit{Fig \ref{fig:webcam}}.
 
 \ifpicture
 \begin{figure}[h!]
@@ -68,17 +68,20 @@ Motion estimation can be relatively easily achieved using polynomial expansion \
 \end{figure}
 \fi
 
-\textbf{Step 1:\\
-\tab Use OpenCV to calculate a dense optical flow field.\\
-Step 2:\\
-\tab Use the flow result to predict the next frame:\\
-\tab \tab Copy the 2nd frame used in prediction\\
-\tab \tab For each pixel:\\
-\tab \tab \tab Read flow vector of the pixel\\
-\tab \tab \tab Copy the pixel to a position offset by the flow x and y values\\
-\tab \tab Return the newly created frame}
+\begin{lstlisting}[escapeinside={(*}{*)}]
+Step 1:
+	Use OpenCV to calculate a dense optical flow field.
+Step 2:
+	Use the flow result to predict the next frame:
+	Copy the 2nd frame used in prediction
+	For each pixel:
+		Read flow vector of the pixel
+		Copy the pixel to a position offset by the
+		  flow x and y values
+		Return the newly created frame
+\end{lstlisting}
 
-This approach works fairly well on simple images with basic motion and can be used to get inbetween frames or predict the next frame.\\
+This approach works fairly well on simple images with basic motion and can be used to get inbetween frames or predict the next frame.
 
 \ifpicture
 \begin{figure}[h!]
@@ -107,9 +110,14 @@ One Possible solution to the issue of missing information is to use the images t
 
 Some of these ideas are implemented in the program, \textit{WaveFunctionCollapse} \cite{wave function collapse}, which uses ideas from quantum physics to create an algorithm that can generate \emph{locally similar} images to input images. By using a similar algorithm with a 3D array of pixels from a video, where the third dimension is time, it might be possible to get \emph{locally similar} output frames as predictions or automatic inbetween images. Using this large 3d array, the program might be able to make more advanced predictions based on more than just the previous 2 frames.\\
 
-\textbf{Step 1: Read an image sequence and create a 3D array of pixel colour and flow\\
-Step 2: Read array values and create data structure suitable for wave function collapse\\
-Step 3: Synthesise the next frame in the sequence based on likely flow and colours in the desired frame}
+\begin{lstlisting}[escapeinside={(*}{*)}]
+Step 1: Read an image sequence and create a 3D array of pixel
+        colour and flow
+Step 2: Read array values and create data structure suitable
+        for wave function collapse
+Step 3: Synthesise the next frame in the sequence based on
+        likely flow and colours in the desired frame
+\end{lstlisting}
 
 This approach, while theoretically interesting, will likely not produce any accurate results, as the wave function collapse algorithm due to its success at \emph{locally similar results}, rather than results that make logical sense in a wider context such as the whole frame or sequence. However, it is a new method that has not been explored before and might make for interesting future research.
 
@@ -121,10 +129,17 @@ A more modern solution can be found in \cite{auto inbetweens} present an approac
 \subsection{FRep Solids and Heterogeneous Objects}
 An implicit shape can be represented by either $F(x, y)$ for 2D shapes or $F(x, y, z)$ for 3D shapes, where on the defining curve or surface $F(x, y) = 0$ in 2D or $F(x, y, z) = 0$ in 3D. An FRep solid is defined by primitives and operations, where $F \leq 0$. In [Space-time blending] Pasko et al. put forward a method which converts two $k$ dimensional input shapes into $(k+1)$ dimensional shapes in order to blend between them in the higher dimension. This allows inbetween models that do not rely on matching topology of the two inputs, due to their functional representation \cite{hyperfun}. In 2D:
 
-\textbf{Two shapes are given using the x,y plane\\
-Each shape is used as a cross section of a half cylinder in 3D space, by extending them in the z dimension, with space inbetween for the blend\\
-The blending union operation is applied, this can be user controlled with different parameters\\
-Using the z dimension as time, take cross sections of the shape along the z axis to display a smooth blend between the 1st and second shape}
+\begin{lstlisting}[escapeinside={(*}{*)}]
+Two shapes are given using the x,y plane
+Each shape is used as a cross section of a half
+  cylinder in 3D space, by extending them in the
+  z dimension, with space inbetween for the blend
+The blending union operation is applied, this can
+  be user controlled with different parameters
+Using the z dimension as time, take cross sections
+  of the shape along the z axis to display a
+  smooth blend between the 1st and second shape
+\end{lstlisting}
 
 \ifpicture
 \begin{figure}[h!]
